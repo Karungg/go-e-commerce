@@ -1,7 +1,16 @@
 package main
 
-import fmt "fmt"
+import (
+	"go-e-commerce/internal/config"
+	"log"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	cfg, err := config.LoadConfig(".")
+	if err != nil {
+		log.Fatalf("Could not load config: %v", err)
+	}
+
+	db := config.SetupDatabase(cfg)
+	_ = db
 }
