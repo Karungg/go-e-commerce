@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"go-e-commerce/internal/model"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -17,6 +18,11 @@ func SetupDatabase(cfg *Config) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
+	}
+
+	err = db.AutoMigrate(&model.CategoryModel{})
+	if err != nil {
+		log.Fatalf("Failed to auto-migrate database: %v", err)
 	}
 
 	sqlDB, err := db.DB()
