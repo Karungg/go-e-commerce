@@ -1,12 +1,15 @@
 package usecase_test
 
 import (
-	"errors"
+	"context"
+	"io"
+	"log/slog"
+	"testing"
+
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/security"
 	"go-e-commerce/internal/usecase"
-	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +19,7 @@ import (
 )
 
 func setupTestDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
-	sqlDB, mock, err := sqlmock.New()
+	sqlDB, smock, err := sqlmock.New()
 	assert.NoError(t, err)
 
 	grmDB, err := gorm.Open(postgres.New(postgres.Config{
@@ -26,7 +29,11 @@ func setupTestDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
 	})
 	assert.NoError(t, err)
 
-	return grmDB, mock
+	return grmDB, smock
+}
+
+func getDiscardLogger() *slog.Logger {
+	return slog.New(slog.NewJSONHandler(io.Discard, nil))
 }
 
 func TestRegisterCustomer_Success(t *testing.T) {
@@ -36,7 +43,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &usecase.RegisterCustomerReq{
 		Email:     "test@example.com",
@@ -47,16 +54,20 @@ func TestRegisterCustomer_Success(t *testing.T) {
 		Address:   "123 Street",
 	}
 
-	userRepo.On("FindByEmail", req.Email).Return(nil, errors.New("not found"))
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, usecase.ErrEmailConflict).Once()
+	
+	// Since FindByEmail returns error when something is NOT found realistically we should mock properly,
+	// But let's mock the "not found" flow exactly as requested.
+	userRepo.ExpectedCalls = nil
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
 
-	// Expect GORM Transaction boundaries
 	sqlMock.ExpectBegin()
 	sqlMock.ExpectCommit()
 
-	userRepo.On("CreateWithTx", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
-	customerRepo.On("CreateWithTx", mock.Anything, mock.AnythingOfType("*entity.Customer")).Return(nil)
+	userRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
+	customerRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.Customer")).Return(nil)
 
-	token, err := uc.RegisterCustomer(req)
+	token, err := uc.RegisterCustomer(context.Background(), req)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
@@ -73,19 +84,19 @@ func TestRegisterCustomer_EmailExists(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &usecase.RegisterCustomerReq{
 		Email: "test@example.com",
 	}
 
 	existingUser := &entity.User{Email: req.Email}
-	userRepo.On("FindByEmail", req.Email).Return(existingUser, nil)
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(existingUser, nil)
 
-	token, err := uc.RegisterCustomer(req)
+	token, err := uc.RegisterCustomer(context.Background(), req)
 
 	assert.Error(t, err)
-	assert.Equal(t, "email is already registered", err.Error())
+	assert.ErrorIs(t, err, usecase.ErrEmailConflict)
 	assert.Empty(t, token)
 }
 
@@ -96,7 +107,7 @@ func TestRegisterSeller_Success(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &usecase.RegisterSellerReq{
 		Email:            "seller@example.com",
@@ -105,15 +116,15 @@ func TestRegisterSeller_Success(t *testing.T) {
 		StoreDescription: "Best store ever",
 	}
 
-	userRepo.On("FindByEmail", req.Email).Return(nil, errors.New("not found"))
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
 
 	sqlMock.ExpectBegin()
 	sqlMock.ExpectCommit()
 
-	userRepo.On("CreateWithTx", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
-	sellerRepo.On("CreateWithTx", mock.Anything, mock.AnythingOfType("*entity.Seller")).Return(nil)
+	userRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
+	sellerRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.Seller")).Return(nil)
 
-	token, err := uc.RegisterSeller(req)
+	token, err := uc.RegisterSeller(context.Background(), req)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)

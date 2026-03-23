@@ -3,7 +3,6 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	delivery "go-e-commerce/internal/delivery/http"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/usecase"
@@ -26,7 +25,7 @@ func setupRouter(authUsecase usecase.AuthUseCase) *gin.Engine {
 
 func TestRegisterCustomer_Success(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterCustomer", mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("mock.jwt.token", nil)
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("mock.jwt.token", nil)
 
 	router := setupRouter(mockUsecase)
 
@@ -68,9 +67,9 @@ func TestRegisterCustomer_InvalidJSON(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestRegisterCustomer_UsecaseError(t *testing.T) {
+func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterCustomer", mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("", errors.New("email is already registered"))
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("", usecase.ErrEmailConflict)
 
 	router := setupRouter(mockUsecase)
 
@@ -88,18 +87,19 @@ func TestRegisterCustomer_UsecaseError(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	// Since we cleanly mapped the domain error in the controller, it returns 409
+	assert.Equal(t, http.StatusConflict, w.Code)
 	
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
 	
-	assert.Equal(t, "email is already registered", res["error"])
+	assert.Equal(t, usecase.ErrEmailConflict.Error(), res["error"])
 	mockUsecase.AssertExpectations(t)
 }
 
 func TestRegisterSeller_Success(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterSeller", mock.AnythingOfType("*usecase.RegisterSellerReq")).Return("mock.jwt.token", nil)
+	mockUsecase.On("RegisterSeller", mock.Anything, mock.AnythingOfType("*usecase.RegisterSellerReq")).Return("mock.jwt.token", nil)
 
 	router := setupRouter(mockUsecase)
 
