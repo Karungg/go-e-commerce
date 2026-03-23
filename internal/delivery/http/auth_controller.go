@@ -30,13 +30,12 @@ func NewAuthController(router *gin.RouterGroup, authUsecase usecase.AuthUseCase)
 func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 	var req usecase.RegisterCustomerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", err.Error())
+		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
 	}
 
 	token, err := c.authUsecase.RegisterCustomer(ctx.Request.Context(), &req)
 	if err != nil {
-		// Strictly intercept pre-defined Domain Errors
 		var appErr *apperror.AppError
 		if errors.As(err, &appErr) {
 			response.Error(ctx, appErr.Code, "Registration failed", appErr.Message)
@@ -53,7 +52,7 @@ func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 	var req usecase.RegisterSellerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", err.Error())
+		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
 	}
 
