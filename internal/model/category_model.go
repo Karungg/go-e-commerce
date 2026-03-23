@@ -8,7 +8,6 @@ type CategoryModel struct {
 	Description string    `gorm:"type:text"`
 }
 
-// TableName overrides the table name used by GORM
 func (CategoryModel) TableName() string {
 	return "categories"
 }

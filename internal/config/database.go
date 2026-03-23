@@ -20,7 +20,7 @@ func SetupDatabase(cfg *Config) *gorm.DB {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}
 
-	err = db.AutoMigrate(&model.CategoryModel{})
+	err = db.AutoMigrate(&model.CategoryModel{}, &model.ProductModel{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
 	}
