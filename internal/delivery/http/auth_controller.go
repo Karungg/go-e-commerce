@@ -2,8 +2,10 @@ package http
 
 import (
 	"errors"
-	"go-e-commerce/internal/usecase"
 	"net/http"
+
+	"go-e-commerce/internal/delivery/http/response"
+	"go-e-commerce/internal/usecase"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,45 +29,39 @@ func NewAuthController(router *gin.RouterGroup, authUsecase usecase.AuthUseCase)
 func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 	var req usecase.RegisterCustomerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", err.Error())
 		return
 	}
 
 	token, err := c.authUsecase.RegisterCustomer(ctx.Request.Context(), &req)
 	if err != nil {
 		if errors.Is(err, usecase.ErrEmailConflict) {
-			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			response.Error(ctx, http.StatusConflict, "Registration failed", err.Error())
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.Error(ctx, http.StatusInternalServerError, "Internal server error", err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "customer registered successfully",
-		"token":   token,
-	})
+	response.Success(ctx, http.StatusCreated, "customer registered successfully", gin.H{"token": token})
 }
 
 func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 	var req usecase.RegisterSellerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", err.Error())
 		return
 	}
 
 	token, err := c.authUsecase.RegisterSeller(ctx.Request.Context(), &req)
 	if err != nil {
 		if errors.Is(err, usecase.ErrEmailConflict) {
-			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			response.Error(ctx, http.StatusConflict, "Registration failed", err.Error())
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.Error(ctx, http.StatusInternalServerError, "Internal server error", err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "seller registered successfully",
-		"token":   token,
-	})
+	response.Success(ctx, http.StatusCreated, "seller registered successfully", gin.H{"token": token})
 }

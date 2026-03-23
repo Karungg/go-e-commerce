@@ -48,8 +48,12 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
 	
+	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "customer registered successfully", res["message"])
-	assert.Equal(t, "mock.jwt.token", res["token"])
+	
+	// Access nested data dictionary containing the token
+	data := res["data"].(map[string]interface{})
+	assert.Equal(t, "mock.jwt.token", data["token"])
 
 	mockUsecase.AssertExpectations(t)
 }
@@ -65,6 +69,13 @@ func TestRegisterCustomer_InvalidJSON(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var res map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &res)
+	
+	assert.Equal(t, "error", res["status"])
+	assert.Equal(t, "Invalid request payload", res["message"])
+	assert.NotNil(t, res["errors"])
 }
 
 func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
@@ -87,13 +98,14 @@ func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	// Since we cleanly mapped the domain error in the controller, it returns 409
 	assert.Equal(t, http.StatusConflict, w.Code)
 	
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
 	
-	assert.Equal(t, usecase.ErrEmailConflict.Error(), res["error"])
+	assert.Equal(t, "error", res["status"])
+	assert.Equal(t, "Registration failed", res["message"])
+	assert.Equal(t, usecase.ErrEmailConflict.Error(), res["errors"])
 	mockUsecase.AssertExpectations(t)
 }
 
@@ -122,8 +134,11 @@ func TestRegisterSeller_Success(t *testing.T) {
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
 	
+	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "seller registered successfully", res["message"])
-	assert.Equal(t, "mock.jwt.token", res["token"])
+	
+	data := res["data"].(map[string]interface{})
+	assert.Equal(t, "mock.jwt.token", data["token"])
 
 	mockUsecase.AssertExpectations(t)
 }
