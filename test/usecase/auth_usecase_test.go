@@ -8,6 +8,7 @@ import (
 
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/mocks"
+	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/security"
 	"go-e-commerce/internal/usecase"
 
@@ -54,11 +55,6 @@ func TestRegisterCustomer_Success(t *testing.T) {
 		Address:   "123 Street",
 	}
 
-	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, usecase.ErrEmailConflict).Once()
-	
-	// Since FindByEmail returns error when something is NOT found realistically we should mock properly,
-	// But let's mock the "not found" flow exactly as requested.
-	userRepo.ExpectedCalls = nil
 	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
 
 	sqlMock.ExpectBegin()
@@ -96,7 +92,7 @@ func TestRegisterCustomer_EmailExists(t *testing.T) {
 	token, err := uc.RegisterCustomer(context.Background(), req)
 
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, usecase.ErrEmailConflict)
+	assert.ErrorIs(t, err, apperror.ErrEmailConflict)
 	assert.Empty(t, token)
 }
 

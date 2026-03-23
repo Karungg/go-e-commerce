@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	delivery "go-e-commerce/internal/delivery/http"
 	"go-e-commerce/internal/mocks"
+	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/usecase"
 	"net/http"
 	"net/http/httptest"
@@ -51,7 +52,6 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "customer registered successfully", res["message"])
 	
-	// Access nested data dictionary containing the token
 	data := res["data"].(map[string]interface{})
 	assert.Equal(t, "mock.jwt.token", data["token"])
 
@@ -80,7 +80,8 @@ func TestRegisterCustomer_InvalidJSON(t *testing.T) {
 
 func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("", usecase.ErrEmailConflict)
+	// Inject the strictly handled Domain Error dictating 409 boundaries natively
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("", apperror.ErrEmailConflict)
 
 	router := setupRouter(mockUsecase)
 
@@ -105,7 +106,7 @@ func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 	
 	assert.Equal(t, "error", res["status"])
 	assert.Equal(t, "Registration failed", res["message"])
-	assert.Equal(t, usecase.ErrEmailConflict.Error(), res["errors"])
+	assert.Equal(t, apperror.ErrEmailConflict.Message, res["errors"])
 	mockUsecase.AssertExpectations(t)
 }
 

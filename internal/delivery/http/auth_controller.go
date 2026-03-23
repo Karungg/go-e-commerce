@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"go-e-commerce/internal/delivery/http/response"
+	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/usecase"
 
 	"github.com/gin-gonic/gin"
@@ -35,10 +36,13 @@ func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 
 	token, err := c.authUsecase.RegisterCustomer(ctx.Request.Context(), &req)
 	if err != nil {
-		if errors.Is(err, usecase.ErrEmailConflict) {
-			response.Error(ctx, http.StatusConflict, "Registration failed", err.Error())
+		// Strictly intercept pre-defined Domain Errors
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			response.Error(ctx, appErr.Code, "Registration failed", appErr.Message)
 			return
 		}
+		
 		response.Error(ctx, http.StatusInternalServerError, "Internal server error", err.Error())
 		return
 	}
@@ -55,10 +59,12 @@ func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 
 	token, err := c.authUsecase.RegisterSeller(ctx.Request.Context(), &req)
 	if err != nil {
-		if errors.Is(err, usecase.ErrEmailConflict) {
-			response.Error(ctx, http.StatusConflict, "Registration failed", err.Error())
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			response.Error(ctx, appErr.Code, "Registration failed", appErr.Message)
 			return
 		}
+		
 		response.Error(ctx, http.StatusInternalServerError, "Internal server error", err.Error())
 		return
 	}

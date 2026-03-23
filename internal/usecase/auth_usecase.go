@@ -2,21 +2,17 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
-
+	
 	"go-e-commerce/internal/entity"
+	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-)
-
-var (
-	ErrEmailConflict = errors.New("email is already registered")
 )
 
 type AuthUseCase interface {
@@ -81,7 +77,7 @@ func (u *authUseCase) RegisterCustomer(ctx context.Context, req *RegisterCustome
 	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
 		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
-		return "", ErrEmailConflict
+		return "", apperror.ErrEmailConflict
 	}
 
 	hashedPwd, err := u.hashPassword(req.Password)
@@ -137,7 +133,7 @@ func (u *authUseCase) RegisterSeller(ctx context.Context, req *RegisterSellerReq
 	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
 		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
-		return "", ErrEmailConflict
+		return "", apperror.ErrEmailConflict
 	}
 
 	hashedPwd, err := u.hashPassword(req.Password)
