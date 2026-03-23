@@ -1,7 +1,11 @@
 package usecase
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"log/slog"
+	
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
@@ -11,13 +15,18 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	ErrEmailConflict = errors.New("email is already registered")
+)
+
 type AuthUseCase interface {
-	RegisterCustomer(req *RegisterCustomerReq) (string, error)
-	RegisterSeller(req *RegisterSellerReq) (string, error)
+	RegisterCustomer(ctx context.Context, req *RegisterCustomerReq) (string, error)
+	RegisterSeller(ctx context.Context, req *RegisterSellerReq) (string, error)
 }
 
 type authUseCase struct {
 	db           *gorm.DB
+	logger       *slog.Logger
 	userRepo     repository.UserRepository
 	customerRepo repository.CustomerRepository
 	sellerRepo   repository.SellerRepository
@@ -44,6 +53,7 @@ type RegisterSellerReq struct {
 
 func NewAuthUseCase(
 	db *gorm.DB,
+	logger *slog.Logger,
 	userRepo repository.UserRepository,
 	customerRepo repository.CustomerRepository,
 	sellerRepo repository.SellerRepository,
@@ -51,6 +61,7 @@ func NewAuthUseCase(
 ) AuthUseCase {
 	return &authUseCase{
 		db:           db,
+		logger:       logger,
 		userRepo:     userRepo,
 		customerRepo: customerRepo,
 		sellerRepo:   sellerRepo,
@@ -60,17 +71,22 @@ func NewAuthUseCase(
 
 func (u *authUseCase) hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
+	if err != nil {
+		return "", fmt.Errorf("failed to hash password: %w", err)
+	}
+	return string(bytes), nil
 }
 
-func (u *authUseCase) RegisterCustomer(req *RegisterCustomerReq) (string, error) {
-	existingUser, _ := u.userRepo.FindByEmail(req.Email)
+func (u *authUseCase) RegisterCustomer(ctx context.Context, req *RegisterCustomerReq) (string, error) {
+	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
-		return "", errors.New("email is already registered")
+		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
+		return "", ErrEmailConflict
 	}
 
 	hashedPwd, err := u.hashPassword(req.Password)
 	if err != nil {
+		u.logger.ErrorContext(ctx, "Password hashing failed", slog.Any("error", err))
 		return "", err
 	}
 
@@ -93,31 +109,41 @@ func (u *authUseCase) RegisterCustomer(req *RegisterCustomerReq) (string, error)
 	}
 
 	// Run within a database transaction
-	err = u.db.Transaction(func(tx *gorm.DB) error {
-		if err := u.userRepo.CreateWithTx(tx, user); err != nil {
-			return err
+	err = u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := u.userRepo.CreateWithTx(ctx, tx, user); err != nil {
+			return fmt.Errorf("failed to insert user record: %w", err)
 		}
-		if err := u.customerRepo.CreateWithTx(tx, customer); err != nil {
-			return err
+		if err := u.customerRepo.CreateWithTx(ctx, tx, customer); err != nil {
+			return fmt.Errorf("failed to insert customer record: %w", err)
 		}
 		return nil
 	})
 
 	if err != nil {
+		u.logger.ErrorContext(ctx, "Transaction failed during customer registration", slog.Any("error", err))
 		return "", err
 	}
 
-	return u.jwtAuth.GenerateToken(userID, string(entity.RoleCustomer))
+	token, err := u.jwtAuth.GenerateToken(userID, string(entity.RoleCustomer))
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Failed to generate JWT", slog.Any("error", err))
+		return "", fmt.Errorf("failed to generate authentication token: %w", err)
+	}
+
+	u.logger.InfoContext(ctx, "Customer registered successfully", slog.String("user_id", userID.String()))
+	return token, nil
 }
 
-func (u *authUseCase) RegisterSeller(req *RegisterSellerReq) (string, error) {
-	existingUser, _ := u.userRepo.FindByEmail(req.Email)
+func (u *authUseCase) RegisterSeller(ctx context.Context, req *RegisterSellerReq) (string, error) {
+	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
-		return "", errors.New("email is already registered")
+		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
+		return "", ErrEmailConflict
 	}
 
 	hashedPwd, err := u.hashPassword(req.Password)
 	if err != nil {
+		u.logger.ErrorContext(ctx, "Password hashing failed", slog.Any("error", err))
 		return "", err
 	}
 
@@ -139,20 +165,27 @@ func (u *authUseCase) RegisterSeller(req *RegisterSellerReq) (string, error) {
 		IsVerified:       false,
 	}
 
-	// Run within a database transaction
-	err = u.db.Transaction(func(tx *gorm.DB) error {
-		if err := u.userRepo.CreateWithTx(tx, user); err != nil {
-			return err
+	err = u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := u.userRepo.CreateWithTx(ctx, tx, user); err != nil {
+			return fmt.Errorf("failed to insert user record: %w", err)
 		}
-		if err := u.sellerRepo.CreateWithTx(tx, seller); err != nil {
-			return err
+		if err := u.sellerRepo.CreateWithTx(ctx, tx, seller); err != nil {
+			return fmt.Errorf("failed to insert seller record: %w", err)
 		}
 		return nil
 	})
 
 	if err != nil {
+		u.logger.ErrorContext(ctx, "Transaction failed during seller registration", slog.Any("error", err))
 		return "", err
 	}
 
-	return u.jwtAuth.GenerateToken(userID, string(entity.RoleSeller))
+	token, err := u.jwtAuth.GenerateToken(userID, string(entity.RoleSeller))
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Failed to generate JWT", slog.Any("error", err))
+		return "", fmt.Errorf("failed to generate authentication token: %w", err)
+	}
+
+	u.logger.InfoContext(ctx, "Seller registered successfully", slog.String("user_id", userID.String()))
+	return token, nil
 }

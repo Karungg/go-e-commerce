@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/model"
 
@@ -8,8 +9,8 @@ import (
 )
 
 type UserRepository interface {
-	CreateWithTx(tx *gorm.DB, user *entity.User) error
-	FindByEmail(email string) (*entity.User, error)
+	CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error
+	FindByEmail(ctx context.Context, email string) (*entity.User, error)
 }
 
 type userRepository struct {
@@ -20,7 +21,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) CreateWithTx(tx *gorm.DB, user *entity.User) error {
+func (r *userRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error {
 	userModel := &model.UserModel{
 		ID:       user.ID,
 		Email:    user.Email,
@@ -29,7 +30,7 @@ func (r *userRepository) CreateWithTx(tx *gorm.DB, user *entity.User) error {
 		IsActive: user.IsActive,
 	}
 
-	if err := tx.Create(userModel).Error; err != nil {
+	if err := tx.WithContext(ctx).Create(userModel).Error; err != nil {
 		return err
 	}
 	
@@ -38,9 +39,9 @@ func (r *userRepository) CreateWithTx(tx *gorm.DB, user *entity.User) error {
 	return nil
 }
 
-func (r *userRepository) FindByEmail(email string) (*entity.User, error) {
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var userModel model.UserModel
-	if err := r.db.Where("email = ?", email).First(&userModel).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&userModel).Error; err != nil {
 		return nil, err
 	}
 

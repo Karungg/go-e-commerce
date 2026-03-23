@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/model"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type SellerRepository interface {
-	CreateWithTx(tx *gorm.DB, seller *entity.Seller) error
+	CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error
 }
 
 type sellerRepository struct {
@@ -19,7 +20,7 @@ func NewSellerRepository(db *gorm.DB) SellerRepository {
 	return &sellerRepository{db: db}
 }
 
-func (r *sellerRepository) CreateWithTx(tx *gorm.DB, seller *entity.Seller) error {
+func (r *sellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error {
 	sellerModel := &model.SellerModel{
 		ID:               seller.ID,
 		UserID:           seller.UserID,
@@ -29,7 +30,7 @@ func (r *sellerRepository) CreateWithTx(tx *gorm.DB, seller *entity.Seller) erro
 		IsVerified:       seller.IsVerified,
 	}
 
-	if err := tx.Create(sellerModel).Error; err != nil {
+	if err := tx.WithContext(ctx).Create(sellerModel).Error; err != nil {
 		return err
 	}
 

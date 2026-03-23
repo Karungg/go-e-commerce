@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"go-e-commerce/internal/usecase"
 	"net/http"
 
@@ -30,8 +31,12 @@ func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 		return
 	}
 
-	token, err := c.authUsecase.RegisterCustomer(&req)
+	token, err := c.authUsecase.RegisterCustomer(ctx.Request.Context(), &req)
 	if err != nil {
+		if errors.Is(err, usecase.ErrEmailConflict) {
+			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -49,8 +54,12 @@ func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 		return
 	}
 
-	token, err := c.authUsecase.RegisterSeller(&req)
+	token, err := c.authUsecase.RegisterSeller(ctx.Request.Context(), &req)
 	if err != nil {
+		if errors.Is(err, usecase.ErrEmailConflict) {
+			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

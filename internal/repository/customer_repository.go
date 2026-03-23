@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/model"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type CustomerRepository interface {
-	CreateWithTx(tx *gorm.DB, customer *entity.Customer) error
+	CreateWithTx(ctx context.Context, tx *gorm.DB, customer *entity.Customer) error
 }
 
 type customerRepository struct {
@@ -19,7 +20,7 @@ func NewCustomerRepository(db *gorm.DB) CustomerRepository {
 	return &customerRepository{db: db}
 }
 
-func (r *customerRepository) CreateWithTx(tx *gorm.DB, customer *entity.Customer) error {
+func (r *customerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, customer *entity.Customer) error {
 	customerModel := &model.CustomerModel{
 		ID:        customer.ID,
 		UserID:    customer.UserID,
@@ -29,7 +30,7 @@ func (r *customerRepository) CreateWithTx(tx *gorm.DB, customer *entity.Customer
 		Address:   customer.Address,
 	}
 
-	if err := tx.Create(customerModel).Error; err != nil {
+	if err := tx.WithContext(ctx).Create(customerModel).Error; err != nil {
 		return err
 	}
 
