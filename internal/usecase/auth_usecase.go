@@ -9,7 +9,6 @@ import (
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/port"
-	"go-e-commerce/internal/security"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -24,9 +23,9 @@ type authUseCase struct {
 	txManager    port.TransactionManager
 	logger       *slog.Logger
 	userRepo     port.UserRepository
-	customerRepo port.CustomerRepository
-	sellerRepo   port.SellerRepository
-	jwtAuth      *security.JWTAuth
+	customerRepo   port.CustomerRepository
+	sellerRepo     port.SellerRepository
+	tokenGenerator port.TokenGenerator
 }
 
 func NewAuthUseCase(
@@ -35,15 +34,15 @@ func NewAuthUseCase(
 	userRepo port.UserRepository,
 	customerRepo port.CustomerRepository,
 	sellerRepo port.SellerRepository,
-	jwtAuth *security.JWTAuth,
+	tokenGenerator port.TokenGenerator,
 ) AuthUseCase {
 	return &authUseCase{
 		txManager:    txManager,
 		logger:       logger,
 		userRepo:     userRepo,
-		customerRepo: customerRepo,
-		sellerRepo:   sellerRepo,
-		jwtAuth:      jwtAuth,
+		customerRepo:   customerRepo,
+		sellerRepo:     sellerRepo,
+		tokenGenerator: tokenGenerator,
 	}
 }
 
@@ -109,7 +108,7 @@ func (u *authUseCase) RegisterCustomer(ctx context.Context, req *dto.RegisterCus
 		return "", err
 	}
 
-	token, err := u.jwtAuth.GenerateToken(userID, string(entity.RoleCustomer))
+	token, err := u.tokenGenerator.GenerateToken(userID, string(entity.RoleCustomer))
 	if err != nil {
 		u.logger.ErrorContext(ctx, "Failed to generate JWT", slog.Any("error", err))
 		return "", fmt.Errorf("failed to generate authentication token: %w", err)
@@ -171,7 +170,7 @@ func (u *authUseCase) RegisterSeller(ctx context.Context, req *dto.RegisterSelle
 		return "", err
 	}
 
-	token, err := u.jwtAuth.GenerateToken(userID, string(entity.RoleSeller))
+	token, err := u.tokenGenerator.GenerateToken(userID, string(entity.RoleSeller))
 	if err != nil {
 		u.logger.ErrorContext(ctx, "Failed to generate JWT", slog.Any("error", err))
 		return "", fmt.Errorf("failed to generate authentication token: %w", err)
