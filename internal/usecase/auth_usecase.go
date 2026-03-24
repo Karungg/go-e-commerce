@@ -14,11 +14,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthUseCase interface {
-	RegisterCustomer(ctx context.Context, req *dto.RegisterCustomerReq) (string, error)
-	RegisterSeller(ctx context.Context, req *dto.RegisterSellerReq) (string, error)
-}
-
 type authUseCase struct {
 	txManager    port.TransactionManager
 	logger       *slog.Logger
@@ -35,7 +30,7 @@ func NewAuthUseCase(
 	customerRepo port.CustomerRepository,
 	sellerRepo port.SellerRepository,
 	tokenGenerator port.TokenGenerator,
-) AuthUseCase {
+) port.AuthUseCase {
 	return &authUseCase{
 		txManager:    txManager,
 		logger:       logger,
