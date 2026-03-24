@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"go-e-commerce/internal/delivery/http/response"
+	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/usecase"
 
@@ -28,7 +29,7 @@ func NewAuthController(router *gin.RouterGroup, authUsecase usecase.AuthUseCase)
 }
 
 func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
-	var req usecase.RegisterCustomerReq
+	var req dto.RegisterCustomerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
@@ -50,7 +51,7 @@ func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 }
 
 func (c *AuthController) RegisterSeller(ctx *gin.Context) {
-	var req usecase.RegisterSellerReq
+	var req dto.RegisterSellerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
@@ -70,3 +71,4 @@ func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 
 	response.Success(ctx, http.StatusCreated, "seller registered successfully", gin.H{"token": token})
 }
+

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"testing"
 
+	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/pkg/apperror"
@@ -46,7 +47,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 
 	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &usecase.RegisterCustomerReq{
+	req := &dto.RegisterCustomerReq{
 		Email:     "test@example.com",
 		Password:  "password123",
 		FirstName: "John",
@@ -83,7 +84,7 @@ func TestRegisterCustomer_EmailExists(t *testing.T) {
 
 	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &usecase.RegisterCustomerReq{
+	req := &dto.RegisterCustomerReq{
 		Email: "test@example.com",
 	}
 
@@ -106,7 +107,7 @@ func TestRegisterCustomer_PhoneExists(t *testing.T) {
 
 	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &usecase.RegisterCustomerReq{
+	req := &dto.RegisterCustomerReq{
 		Email: "new@example.com",
 		Phone: "123456789",
 	}
@@ -132,7 +133,7 @@ func TestRegisterSeller_Success(t *testing.T) {
 
 	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &usecase.RegisterSellerReq{
+	req := &dto.RegisterSellerReq{
 		Email:            "seller@example.com",
 		Password:         "password123",
 		StoreName:        "Super Store",
@@ -167,7 +168,7 @@ func TestRegisterSeller_StoreNameExists(t *testing.T) {
 
 	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &usecase.RegisterSellerReq{
+	req := &dto.RegisterSellerReq{
 		Email:     "new_seller@example.com",
 		StoreName: "Super Store",
 	}

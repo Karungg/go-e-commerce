@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	delivery "go-e-commerce/internal/delivery/http"
+	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/usecase"
@@ -26,11 +27,11 @@ func setupRouter(authUsecase usecase.AuthUseCase) *gin.Engine {
 
 func TestRegisterCustomer_Success(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("mock.jwt.token", nil)
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*dto.RegisterCustomerReq")).Return("mock.jwt.token", nil)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := usecase.RegisterCustomerReq{
+	reqBody := dto.RegisterCustomerReq{
 		Email:     "cust@example.com",
 		Password:  "password",
 		FirstName: "John",
@@ -81,11 +82,11 @@ func TestRegisterCustomer_InvalidJSON(t *testing.T) {
 func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
 	// Inject the strictly handled Domain Error dictating 409 boundaries natively
-	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*usecase.RegisterCustomerReq")).Return("", apperror.ErrEmailConflict)
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*dto.RegisterCustomerReq")).Return("", apperror.ErrEmailConflict)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := usecase.RegisterCustomerReq{
+	reqBody := dto.RegisterCustomerReq{
 		Email:     "cust@example.com",
 		Password:  "password",
 		FirstName: "John",
@@ -112,11 +113,11 @@ func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 
 func TestRegisterSeller_Success(t *testing.T) {
 	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterSeller", mock.Anything, mock.AnythingOfType("*usecase.RegisterSellerReq")).Return("mock.jwt.token", nil)
+	mockUsecase.On("RegisterSeller", mock.Anything, mock.AnythingOfType("*dto.RegisterSellerReq")).Return("mock.jwt.token", nil)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := usecase.RegisterSellerReq{
+	reqBody := dto.RegisterSellerReq{
 		Email:            "seller@example.com",
 		Password:         "password",
 		StoreName:        "Awesome Store",
