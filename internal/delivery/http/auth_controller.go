@@ -7,16 +7,16 @@ import (
 	"go-e-commerce/internal/delivery/http/response"
 	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/usecase"
+	"go-e-commerce/internal/port"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AuthController struct {
-	authUsecase usecase.AuthUseCase
+	authUsecase port.AuthUseCase
 }
 
-func NewAuthController(authUsecase usecase.AuthUseCase) *AuthController {
+func NewAuthController(authUsecase port.AuthUseCase) *AuthController {
 	return &AuthController{
 		authUsecase: authUsecase,
 	}

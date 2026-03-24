@@ -7,7 +7,7 @@ import (
 	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/usecase"
+	"go-e-commerce/internal/port"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func setupRouter(authUsecase usecase.AuthUseCase) *gin.Engine {
+func setupRouter(authUsecase port.AuthUseCase) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	api := router.Group("/api")
