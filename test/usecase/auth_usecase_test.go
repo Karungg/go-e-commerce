@@ -10,6 +10,7 @@ import (
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/pkg/apperror"
+	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
 	"go-e-commerce/internal/usecase"
 
@@ -45,7 +46,8 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &dto.RegisterCustomerReq{
 		Email:     "test@example.com",
@@ -62,8 +64,8 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	sqlMock.ExpectBegin()
 	sqlMock.ExpectCommit()
 
-	userRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
-	customerRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.Customer")).Return(nil)
+	userRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
+	customerRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.Customer")).Return(nil)
 
 	token, err := uc.RegisterCustomer(context.Background(), req)
 
@@ -82,7 +84,8 @@ func TestRegisterCustomer_EmailExists(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &dto.RegisterCustomerReq{
 		Email: "test@example.com",
@@ -105,7 +108,8 @@ func TestRegisterCustomer_PhoneExists(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &dto.RegisterCustomerReq{
 		Email: "new@example.com",
@@ -131,7 +135,8 @@ func TestRegisterSeller_Success(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &dto.RegisterSellerReq{
 		Email:            "seller@example.com",
@@ -146,8 +151,8 @@ func TestRegisterSeller_Success(t *testing.T) {
 	sqlMock.ExpectBegin()
 	sqlMock.ExpectCommit()
 
-	userRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
-	sellerRepo.On("CreateWithTx", mock.Anything, mock.Anything, mock.AnythingOfType("*entity.Seller")).Return(nil)
+	userRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
+	sellerRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.Seller")).Return(nil)
 
 	token, err := uc.RegisterSeller(context.Background(), req)
 
@@ -166,7 +171,8 @@ func TestRegisterSeller_StoreNameExists(t *testing.T) {
 	sellerRepo := new(mocks.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
-	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	req := &dto.RegisterSellerReq{
 		Email:     "new_seller@example.com",

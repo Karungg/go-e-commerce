@@ -30,8 +30,9 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	customerRepo := repository.NewCustomerRepository(db)
 	sellerRepo := repository.NewSellerRepository(db)
+	txManager := repository.NewTransactionManager(db)
 
-	authUsecase := usecase.NewAuthUseCase(db, logger, userRepo, customerRepo, sellerRepo, jwtAuth)
+	authUsecase := usecase.NewAuthUseCase(txManager, logger, userRepo, customerRepo, sellerRepo, jwtAuth)
 
 	router := gin.Default()
 	api := router.Group("/api")

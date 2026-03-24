@@ -5,15 +5,14 @@ import (
 	"go-e-commerce/internal/entity"
 
 	"github.com/stretchr/testify/mock"
-	"gorm.io/gorm"
 )
 
 type UserRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *UserRepositoryMock) CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error {
-	args := m.Called(ctx, tx, user)
+func (m *UserRepositoryMock) Create(ctx context.Context, user *entity.User) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 

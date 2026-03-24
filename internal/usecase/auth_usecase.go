@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type AuthUseCase interface {
@@ -22,7 +21,7 @@ type AuthUseCase interface {
 }
 
 type authUseCase struct {
-	db           *gorm.DB
+	txManager    port.TransactionManager
 	logger       *slog.Logger
 	userRepo     port.UserRepository
 	customerRepo port.CustomerRepository
@@ -31,7 +30,7 @@ type authUseCase struct {
 }
 
 func NewAuthUseCase(
-	db *gorm.DB,
+	txManager port.TransactionManager,
 	logger *slog.Logger,
 	userRepo port.UserRepository,
 	customerRepo port.CustomerRepository,
@@ -39,7 +38,7 @@ func NewAuthUseCase(
 	jwtAuth *security.JWTAuth,
 ) AuthUseCase {
 	return &authUseCase{
-		db:           db,
+		txManager:    txManager,
 		logger:       logger,
 		userRepo:     userRepo,
 		customerRepo: customerRepo,
@@ -95,11 +94,11 @@ func (u *authUseCase) RegisterCustomer(ctx context.Context, req *dto.RegisterCus
 		Address:   req.Address,
 	}
 
-	err = u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := u.userRepo.CreateWithTx(ctx, tx, user); err != nil {
+	err = u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
+		if err := u.userRepo.Create(ctx, user); err != nil {
 			return fmt.Errorf("failed to insert user record: %w", err)
 		}
-		if err := u.customerRepo.CreateWithTx(ctx, tx, customer); err != nil {
+		if err := u.customerRepo.Create(ctx, customer); err != nil {
 			return fmt.Errorf("failed to insert customer record: %w", err)
 		}
 		return nil
@@ -157,11 +156,11 @@ func (u *authUseCase) RegisterSeller(ctx context.Context, req *dto.RegisterSelle
 		IsVerified:       false,
 	}
 
-	err = u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := u.userRepo.CreateWithTx(ctx, tx, user); err != nil {
+	err = u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
+		if err := u.userRepo.Create(ctx, user); err != nil {
 			return fmt.Errorf("failed to insert user record: %w", err)
 		}
-		if err := u.sellerRepo.CreateWithTx(ctx, tx, seller); err != nil {
+		if err := u.sellerRepo.Create(ctx, seller); err != nil {
 			return fmt.Errorf("failed to insert seller record: %w", err)
 		}
 		return nil
