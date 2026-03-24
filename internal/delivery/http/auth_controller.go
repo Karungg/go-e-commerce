@@ -33,7 +33,8 @@ func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 	if err != nil {
 		var appErr *apperror.AppError
 		if errors.As(err, &appErr) {
-			response.Error(ctx, appErr.Code, "Registration failed", appErr.Message)
+			status := response.MapAppErrorToHTTPStatus(appErr)
+			response.Error(ctx, status, "Registration failed", appErr.Message)
 			return
 		}
 		
@@ -55,7 +56,8 @@ func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 	if err != nil {
 		var appErr *apperror.AppError
 		if errors.As(err, &appErr) {
-			response.Error(ctx, appErr.Code, "Registration failed", appErr.Message)
+			status := response.MapAppErrorToHTTPStatus(appErr)
+			response.Error(ctx, status, "Registration failed", appErr.Message)
 			return
 		}
 		

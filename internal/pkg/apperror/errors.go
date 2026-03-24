@@ -1,11 +1,19 @@
 package apperror
 
-import "net/http"
+// ErrorCode is a domain-specific string code for an error
+type ErrorCode string
 
-// AppError represents a predefined domain error combining HTTP Codes and user-facing Messages natively
+const (
+	CodeConflict           ErrorCode = "CONFLICT"
+	CodeUnauthorized       ErrorCode = "UNAUTHORIZED"
+	CodeNotFound           ErrorCode = "NOT_FOUND"
+	CodeInternal           ErrorCode = "INTERNAL_ERROR"
+)
+
+// AppError represents a predefined domain error combining ErrorCodes and user-facing Messages natively
 type AppError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
 }
 
 // Error strictly implements the Go error interface natively
@@ -19,12 +27,12 @@ func (e *AppError) Error() string {
 
 var (
 	// Auth Errors
-	ErrEmailConflict     = &AppError{http.StatusConflict, "email is already strictly registered"}
-	ErrPhoneConflict     = &AppError{http.StatusConflict, "phone number is already associated with an account"}
-	ErrStoreNameConflict = &AppError{http.StatusConflict, "store name is already taken"}
-	ErrInvalidPassword   = &AppError{http.StatusUnauthorized, "invalid email or password"}
-	ErrUserNotFound      = &AppError{http.StatusNotFound, "user profile could not be found"}
+	ErrEmailConflict     = &AppError{CodeConflict, "email is already strictly registered"}
+	ErrPhoneConflict     = &AppError{CodeConflict, "phone number is already associated with an account"}
+	ErrStoreNameConflict = &AppError{CodeConflict, "store name is already taken"}
+	ErrInvalidPassword   = &AppError{CodeUnauthorized, "invalid email or password"}
+	ErrUserNotFound      = &AppError{CodeNotFound, "user profile could not be found"}
 
 	// System Errors
-	ErrInternal = &AppError{http.StatusInternalServerError, "internal server error"}
+	ErrInternal = &AppError{CodeInternal, "internal server error"}
 )

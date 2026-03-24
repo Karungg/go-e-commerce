@@ -1,6 +1,11 @@
 package response
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"go-e-commerce/internal/pkg/apperror"
+)
 
 // WebResponse represents a standardized API payload structure widely recognized by frontend clients
 type WebResponse struct {
@@ -29,4 +34,18 @@ func Error(ctx *gin.Context, code int, message string, errors interface{}) {
 		Message: message,
 		Errors:  errors,
 	})
+}
+
+// MapAppErrorToHTTPStatus converts an app domain error code to an HTTP status code
+func MapAppErrorToHTTPStatus(appErr *apperror.AppError) int {
+	switch appErr.Code {
+	case apperror.CodeConflict:
+		return http.StatusConflict
+	case apperror.CodeUnauthorized:
+		return http.StatusUnauthorized
+	case apperror.CodeNotFound:
+		return http.StatusNotFound
+	default:
+		return http.StatusInternalServerError
+	}
 }
