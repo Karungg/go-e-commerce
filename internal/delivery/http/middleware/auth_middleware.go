@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"go-e-commerce/internal/delivery/http/response"
-	"go-e-commerce/internal/security"
+	"go-e-commerce/internal/port"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RequireAuth is a middleware that validates the JWT token
-func RequireAuth(jwtAuth *security.JWTAuth) gin.HandlerFunc {
+func RequireAuth(jwtAuth port.TokenValidator) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {

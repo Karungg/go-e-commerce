@@ -3,7 +3,7 @@ package route
 import (
 	deliveryHttp "go-e-commerce/internal/delivery/http"
 	"go-e-commerce/internal/delivery/http/middleware"
-	"go-e-commerce/internal/security"
+	"go-e-commerce/internal/port"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,7 +12,7 @@ import (
 func SetupRoutes(
 	api *gin.RouterGroup,
 	authController *deliveryHttp.AuthController,
-	jwtAuth *security.JWTAuth,
+	jwtAuth port.TokenValidator,
 ) {
 	// Public Routes
 	auth := api.Group("/auth")
