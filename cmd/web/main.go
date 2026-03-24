@@ -30,6 +30,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	db := config.SetupDatabase(cfg)
+	config.RunMigrations(db)
 
 	jwtAuth := security.NewJWTAuth(cfg.JWTSecret, cfg.JWTExpirationHours)
 
