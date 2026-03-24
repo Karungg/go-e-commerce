@@ -21,7 +21,14 @@ func setupRouter(authUsecase usecase.AuthUseCase) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	api := router.Group("/api")
-	delivery.NewAuthController(api, authUsecase)
+	
+	authController := delivery.NewAuthController(authUsecase)
+	auth := api.Group("/auth")
+	{
+		auth.POST("/register/customer", authController.RegisterCustomer)
+		auth.POST("/register/seller", authController.RegisterSeller)
+	}
+	
 	return router
 }
 

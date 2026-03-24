@@ -16,15 +16,9 @@ type AuthController struct {
 	authUsecase usecase.AuthUseCase
 }
 
-func NewAuthController(router *gin.RouterGroup, authUsecase usecase.AuthUseCase) {
-	controller := &AuthController{
+func NewAuthController(authUsecase usecase.AuthUseCase) *AuthController {
+	return &AuthController{
 		authUsecase: authUsecase,
-	}
-
-	authRoutes := router.Group("/auth")
-	{
-		authRoutes.POST("/register/customer", controller.RegisterCustomer)
-		authRoutes.POST("/register/seller", controller.RegisterSeller)
 	}
 }
 

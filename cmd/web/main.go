@@ -7,6 +7,7 @@ import (
 
 	"go-e-commerce/internal/config"
 	delivery "go-e-commerce/internal/delivery/http"
+	"go-e-commerce/internal/delivery/http/route"
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
 	"go-e-commerce/internal/usecase"
@@ -36,7 +37,9 @@ func main() {
 
 	router := gin.Default()
 	api := router.Group("/api")
-	delivery.NewAuthController(api, authUsecase)
+	
+	authController := delivery.NewAuthController(authUsecase)
+	route.SetupRoutes(api, authController, jwtAuth)
 
 	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)
 	logger.Info("Server running", slog.String("port", serverAddr))
