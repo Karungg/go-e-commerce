@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"log"
 
 	"github.com/spf13/viper"
@@ -30,6 +31,18 @@ func LoadConfig(path string) (*Config, error) {
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
+	}
+
+	if config.DBHost == "" || config.DBPort == "" || config.DBUser == "" || config.DBPassword == "" || config.DBName == "" {
+		return nil, errors.New("missing required database configuration fields in environment variables")
+	}
+
+	if config.JWTSecret == "" {
+		return nil, errors.New("missing JWT_SECRET in environment variables")
+	}
+
+	if config.ServerPort == 0 {
+		config.ServerPort = 8080
 	}
 
 	return &config, nil
