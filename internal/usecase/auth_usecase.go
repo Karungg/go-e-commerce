@@ -80,6 +80,14 @@ func (u *authUseCase) RegisterCustomer(ctx context.Context, req *RegisterCustome
 		return "", apperror.ErrEmailConflict
 	}
 
+	if req.Phone != "" {
+		existingCustomer, _ := u.customerRepo.FindByPhone(ctx, req.Phone)
+		if existingCustomer != nil {
+			u.logger.WarnContext(ctx, "Registration failed due to phone conflict", slog.String("phone", req.Phone))
+			return "", apperror.ErrPhoneConflict
+		}
+	}
+
 	hashedPwd, err := u.hashPassword(req.Password)
 	if err != nil {
 		u.logger.ErrorContext(ctx, "Password hashing failed", slog.Any("error", err))
@@ -134,6 +142,12 @@ func (u *authUseCase) RegisterSeller(ctx context.Context, req *RegisterSellerReq
 	if existingUser != nil {
 		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
 		return "", apperror.ErrEmailConflict
+	}
+
+	existingSeller, _ := u.sellerRepo.FindByStoreName(ctx, req.StoreName)
+	if existingSeller != nil {
+		u.logger.WarnContext(ctx, "Registration failed due to store name conflict", slog.String("store_name", req.StoreName))
+		return "", apperror.ErrStoreNameConflict
 	}
 
 	hashedPwd, err := u.hashPassword(req.Password)

@@ -56,6 +56,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	}
 
 	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
+	customerRepo.On("FindByPhone", mock.Anything, req.Phone).Return(nil, nil)
 
 	sqlMock.ExpectBegin()
 	sqlMock.ExpectCommit()
@@ -96,6 +97,32 @@ func TestRegisterCustomer_EmailExists(t *testing.T) {
 	assert.Empty(t, token)
 }
 
+func TestRegisterCustomer_PhoneExists(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(mocks.UserRepositoryMock)
+	customerRepo := new(mocks.CustomerRepositoryMock)
+	sellerRepo := new(mocks.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	req := &usecase.RegisterCustomerReq{
+		Email: "new@example.com",
+		Phone: "123456789",
+	}
+
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
+	
+	existingCustomer := &entity.Customer{Phone: req.Phone}
+	customerRepo.On("FindByPhone", mock.Anything, req.Phone).Return(existingCustomer, nil)
+
+	token, err := uc.RegisterCustomer(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrPhoneConflict)
+	assert.Empty(t, token)
+}
+
 func TestRegisterSeller_Success(t *testing.T) {
 	db, sqlMock := setupTestDB(t)
 	userRepo := new(mocks.UserRepositoryMock)
@@ -113,6 +140,7 @@ func TestRegisterSeller_Success(t *testing.T) {
 	}
 
 	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
+	sellerRepo.On("FindByStoreName", mock.Anything, req.StoreName).Return(nil, nil)
 
 	sqlMock.ExpectBegin()
 	sqlMock.ExpectCommit()
@@ -128,4 +156,30 @@ func TestRegisterSeller_Success(t *testing.T) {
 	userRepo.AssertExpectations(t)
 	sellerRepo.AssertExpectations(t)
 	assert.NoError(t, sqlMock.ExpectationsWereMet())
+}
+
+func TestRegisterSeller_StoreNameExists(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(mocks.UserRepositoryMock)
+	customerRepo := new(mocks.CustomerRepositoryMock)
+	sellerRepo := new(mocks.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	uc := usecase.NewAuthUseCase(db, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	req := &usecase.RegisterSellerReq{
+		Email:     "new_seller@example.com",
+		StoreName: "Super Store",
+	}
+
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
+
+	existingSeller := &entity.Seller{StoreName: req.StoreName}
+	sellerRepo.On("FindByStoreName", mock.Anything, req.StoreName).Return(existingSeller, nil)
+
+	token, err := uc.RegisterSeller(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrStoreNameConflict)
+	assert.Empty(t, token)
 }

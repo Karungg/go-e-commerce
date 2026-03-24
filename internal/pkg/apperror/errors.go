@@ -19,9 +19,11 @@ func (e *AppError) Error() string {
 
 var (
 	// Auth Errors
-	ErrEmailConflict   = &AppError{http.StatusConflict, "email is already strictly registered"}
-	ErrInvalidPassword = &AppError{http.StatusUnauthorized, "invalid email or password"}
-	ErrUserNotFound    = &AppError{http.StatusNotFound, "user profile could not be found"}
+	ErrEmailConflict     = &AppError{http.StatusConflict, "email is already strictly registered"}
+	ErrPhoneConflict     = &AppError{http.StatusConflict, "phone number is already associated with an account"}
+	ErrStoreNameConflict = &AppError{http.StatusConflict, "store name is already taken"}
+	ErrInvalidPassword   = &AppError{http.StatusUnauthorized, "invalid email or password"}
+	ErrUserNotFound      = &AppError{http.StatusNotFound, "user profile could not be found"}
 
 	// System Errors
 	ErrInternal = &AppError{http.StatusInternalServerError, "internal server error"}

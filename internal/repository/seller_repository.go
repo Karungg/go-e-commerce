@@ -10,6 +10,7 @@ import (
 
 type SellerRepository interface {
 	CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error
+	FindByStoreName(ctx context.Context, storeName string) (*entity.Seller, error)
 }
 
 type sellerRepository struct {
@@ -37,4 +38,22 @@ func (r *sellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller
 	seller.CreatedAt = sellerModel.CreatedAt
 	seller.UpdatedAt = sellerModel.UpdatedAt
 	return nil
+}
+
+func (r *sellerRepository) FindByStoreName(ctx context.Context, storeName string) (*entity.Seller, error) {
+	var sellerModel model.SellerModel
+	if err := r.db.WithContext(ctx).Where("store_name = ?", storeName).First(&sellerModel).Error; err != nil {
+		return nil, err
+	}
+
+	return &entity.Seller{
+		ID:               sellerModel.ID,
+		UserID:           sellerModel.UserID,
+		StoreName:        sellerModel.StoreName,
+		StoreDescription: sellerModel.StoreDescription,
+		LogoUrl:          sellerModel.LogoUrl,
+		IsVerified:       sellerModel.IsVerified,
+		CreatedAt:        sellerModel.CreatedAt,
+		UpdatedAt:        sellerModel.UpdatedAt,
+	}, nil
 }
