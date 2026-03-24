@@ -8,20 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type SellerRepository interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error
-	FindByStoreName(ctx context.Context, storeName string) (*entity.Seller, error)
-}
-
-type sellerRepository struct {
+type SellerRepository struct {
 	db *gorm.DB
 }
 
-func NewSellerRepository(db *gorm.DB) SellerRepository {
-	return &sellerRepository{db: db}
+func NewSellerRepository(db *gorm.DB) *SellerRepository {
+	return &SellerRepository{db: db}
 }
 
-func (r *sellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error {
+func (r *SellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error {
 	sellerModel := &model.SellerModel{
 		ID:               seller.ID,
 		UserID:           seller.UserID,
@@ -40,7 +35,7 @@ func (r *sellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller
 	return nil
 }
 
-func (r *sellerRepository) FindByStoreName(ctx context.Context, storeName string) (*entity.Seller, error) {
+func (r *SellerRepository) FindByStoreName(ctx context.Context, storeName string) (*entity.Seller, error) {
 	var sellerModel model.SellerModel
 	if err := r.db.WithContext(ctx).Where("store_name = ?", storeName).First(&sellerModel).Error; err != nil {
 		return nil, err

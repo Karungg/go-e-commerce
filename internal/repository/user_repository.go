@@ -8,20 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error
-	FindByEmail(ctx context.Context, email string) (*entity.User, error)
-}
-
-type userRepository struct {
+type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{db: db}
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	return &UserRepository{db: db}
 }
 
-func (r *userRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error {
+func (r *UserRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error {
 	userModel := &model.UserModel{
 		ID:       user.ID,
 		Email:    user.Email,
@@ -39,7 +34,7 @@ func (r *userRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, user *en
 	return nil
 }
 
-func (r *userRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var userModel model.UserModel
 	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&userModel).Error; err != nil {
 		return nil, err

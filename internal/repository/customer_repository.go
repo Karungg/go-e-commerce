@@ -8,20 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type CustomerRepository interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, customer *entity.Customer) error
-	FindByPhone(ctx context.Context, phone string) (*entity.Customer, error)
-}
-
-type customerRepository struct {
+type CustomerRepository struct {
 	db *gorm.DB
 }
 
-func NewCustomerRepository(db *gorm.DB) CustomerRepository {
-	return &customerRepository{db: db}
+func NewCustomerRepository(db *gorm.DB) *CustomerRepository {
+	return &CustomerRepository{db: db}
 }
 
-func (r *customerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, customer *entity.Customer) error {
+func (r *CustomerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, customer *entity.Customer) error {
 	customerModel := &model.CustomerModel{
 		ID:        customer.ID,
 		UserID:    customer.UserID,
@@ -40,7 +35,7 @@ func (r *customerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, cust
 	return nil
 }
 
-func (r *customerRepository) FindByPhone(ctx context.Context, phone string) (*entity.Customer, error) {
+func (r *CustomerRepository) FindByPhone(ctx context.Context, phone string) (*entity.Customer, error) {
 	var customerModel model.CustomerModel
 	if err := r.db.WithContext(ctx).Where("phone = ?", phone).First(&customerModel).Error; err != nil {
 		return nil, err

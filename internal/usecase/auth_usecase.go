@@ -8,7 +8,7 @@ import (
 	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/repository"
+	"go-e-commerce/internal/port"
 	"go-e-commerce/internal/security"
 
 	"github.com/google/uuid"
@@ -24,18 +24,18 @@ type AuthUseCase interface {
 type authUseCase struct {
 	db           *gorm.DB
 	logger       *slog.Logger
-	userRepo     repository.UserRepository
-	customerRepo repository.CustomerRepository
-	sellerRepo   repository.SellerRepository
+	userRepo     port.UserRepository
+	customerRepo port.CustomerRepository
+	sellerRepo   port.SellerRepository
 	jwtAuth      *security.JWTAuth
 }
 
 func NewAuthUseCase(
 	db *gorm.DB,
 	logger *slog.Logger,
-	userRepo repository.UserRepository,
-	customerRepo repository.CustomerRepository,
-	sellerRepo repository.SellerRepository,
+	userRepo port.UserRepository,
+	customerRepo port.CustomerRepository,
+	sellerRepo port.SellerRepository,
 	jwtAuth *security.JWTAuth,
 ) AuthUseCase {
 	return &authUseCase{
