@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"go-e-commerce/internal/config"
 	delivery "go-e-commerce/internal/delivery/http"
@@ -41,11 +46,35 @@ func main() {
 	authController := delivery.NewAuthController(authUsecase)
 	route.SetupRoutes(api, authController, jwtAuth)
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)
-	logger.Info("Server running", slog.String("port", serverAddr))
-	
-	if err := router.Run(serverAddr); err != nil {
-		logger.Error("Server failed to start", slog.Any("error", err))
+	srv := &http.Server{
+		Addr:    serverAddr,
+		Handler: router,
+	}
+
+	go func() {
+		logger.Info("Server running", slog.String("port", serverAddr))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("Server failed to start", slog.Any("error", err))
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+
+	stop()
+	logger.Info("Shutting down gracefully, press Ctrl+C again to force")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Server forced to shutdown", slog.Any("error", err))
 		os.Exit(1)
 	}
+
+	logger.Info("Server exiting")
 }
