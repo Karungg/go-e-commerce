@@ -16,7 +16,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, user *entity.User) error {
+func (r *UserRepository) Create(ctx context.Context, user *entity.User) error {
 	userModel := &model.UserModel{
 		ID:       user.ID,
 		Email:    user.Email,
@@ -25,7 +25,8 @@ func (r *UserRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, user *en
 		IsActive: user.IsActive,
 	}
 
-	if err := tx.WithContext(ctx).Create(userModel).Error; err != nil {
+	db := ExtractTx(ctx, r.db)
+	if err := db.WithContext(ctx).Create(userModel).Error; err != nil {
 		return err
 	}
 	

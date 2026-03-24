@@ -16,7 +16,7 @@ func NewCustomerRepository(db *gorm.DB) *CustomerRepository {
 	return &CustomerRepository{db: db}
 }
 
-func (r *CustomerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, customer *entity.Customer) error {
+func (r *CustomerRepository) Create(ctx context.Context, customer *entity.Customer) error {
 	customerModel := &model.CustomerModel{
 		ID:        customer.ID,
 		UserID:    customer.UserID,
@@ -26,7 +26,8 @@ func (r *CustomerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, cust
 		Address:   customer.Address,
 	}
 
-	if err := tx.WithContext(ctx).Create(customerModel).Error; err != nil {
+	db := ExtractTx(ctx, r.db)
+	if err := db.WithContext(ctx).Create(customerModel).Error; err != nil {
 		return err
 	}
 

@@ -16,7 +16,7 @@ func NewSellerRepository(db *gorm.DB) *SellerRepository {
 	return &SellerRepository{db: db}
 }
 
-func (r *SellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller *entity.Seller) error {
+func (r *SellerRepository) Create(ctx context.Context, seller *entity.Seller) error {
 	sellerModel := &model.SellerModel{
 		ID:               seller.ID,
 		UserID:           seller.UserID,
@@ -26,7 +26,8 @@ func (r *SellerRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, seller
 		IsVerified:       seller.IsVerified,
 	}
 
-	if err := tx.WithContext(ctx).Create(sellerModel).Error; err != nil {
+	db := ExtractTx(ctx, r.db)
+	if err := db.WithContext(ctx).Create(sellerModel).Error; err != nil {
 		return err
 	}
 
