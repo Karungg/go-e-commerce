@@ -10,20 +10,17 @@ const (
 	CodeInternal           ErrorCode = "INTERNAL_ERROR"
 )
 
-// AppError represents a predefined domain error combining ErrorCodes and user-facing Messages natively
+// AppError represents a predefined domain error
 type AppError struct {
 	Code    ErrorCode `json:"code"`
 	Message string    `json:"message"`
 }
 
-// Error strictly implements the Go error interface natively
+// Error implements the error interface
 func (e *AppError) Error() string {
 	return e.Message
 }
 
-// ---------------------------------------------------------
-// CENTRAL ERROR DICTIONARY
-// ---------------------------------------------------------
 
 var (
 	// Auth Errors
