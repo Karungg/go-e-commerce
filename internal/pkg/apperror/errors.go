@@ -4,6 +4,7 @@ package apperror
 type ErrorCode string
 
 const (
+	CodeBadRequest         ErrorCode = "BAD_REQUEST"
 	CodeConflict           ErrorCode = "CONFLICT"
 	CodeUnauthorized       ErrorCode = "UNAUTHORIZED"
 	CodeNotFound           ErrorCode = "NOT_FOUND"
@@ -30,6 +31,10 @@ var (
 	ErrInvalidPassword   = &AppError{CodeUnauthorized, "invalid email or password"}
 	ErrUserNotFound      = &AppError{CodeNotFound, "user profile could not be found"}
 
+	// Category Errors
+	ErrCategoryNotFound  = &AppError{CodeNotFound, "category not found"}
+
 	// System Errors
-	ErrInternal = &AppError{CodeInternal, "internal server error"}
+	ErrBadRequest = &AppError{CodeBadRequest, "invalid request"}
+	ErrInternal   = &AppError{CodeInternal, "internal server error"}
 )
