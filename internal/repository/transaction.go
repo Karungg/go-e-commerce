@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"go-e-commerce/internal/port"
+	authPort "go-e-commerce/internal/port/auth"
 
 	"gorm.io/gorm"
 )
@@ -15,7 +15,7 @@ type transactionManager struct {
 }
 
 // NewTransactionManager creates a new transaction manager that uses GORM
-func NewTransactionManager(db *gorm.DB) port.TransactionManager {
+func NewTransactionManager(db *gorm.DB) authPort.TransactionManager {
 	return &transactionManager{db: db}
 }
 

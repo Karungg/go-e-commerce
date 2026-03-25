@@ -11,11 +11,15 @@ import (
 	"time"
 
 	"go-e-commerce/internal/config"
-	delivery "go-e-commerce/internal/delivery/http"
+	authCtrl "go-e-commerce/internal/delivery/http/auth"
+	categoryCtrl "go-e-commerce/internal/delivery/http/category"
 	"go-e-commerce/internal/delivery/http/route"
+	authRepo "go-e-commerce/internal/repository/auth"
+	categoryRepo "go-e-commerce/internal/repository/category"
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
-	"go-e-commerce/internal/usecase"
+	authUC "go-e-commerce/internal/usecase/auth"
+	categoryUC "go-e-commerce/internal/usecase/category"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,20 +38,20 @@ func main() {
 
 	jwtAuth := security.NewJWTAuth(cfg.JWTSecret, cfg.JWTExpirationHours)
 
-	userRepo := repository.NewUserRepository(db)
-	customerRepo := repository.NewCustomerRepository(db)
-	sellerRepo := repository.NewSellerRepository(db)
-	categoryRepo := repository.NewCategoryRepository(db)
+	userRepo := authRepo.NewUserRepository(db)
+	customerRepo := authRepo.NewCustomerRepository(db)
+	sellerRepo := authRepo.NewSellerRepository(db)
+	catRepo := categoryRepo.NewCategoryRepository(db)
 	txManager := repository.NewTransactionManager(db)
 
-	authUsecase := usecase.NewAuthUseCase(txManager, logger, userRepo, customerRepo, sellerRepo, jwtAuth)
-	categoryUsecase := usecase.NewCategoryUseCase(categoryRepo)
+	authUsecase := authUC.NewAuthUseCase(txManager, logger, userRepo, customerRepo, sellerRepo, jwtAuth)
+	categoryUsecase := categoryUC.NewCategoryUseCase(catRepo)
 
 	router := gin.Default()
 	api := router.Group("/api")
 	
-	authController := delivery.NewAuthController(authUsecase)
-	categoryController := delivery.NewCategoryController(categoryUsecase)
+	authController := authCtrl.NewAuthController(authUsecase)
+	categoryController := categoryCtrl.NewCategoryController(categoryUsecase)
 	route.SetupRoutes(api, authController, categoryController, jwtAuth)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

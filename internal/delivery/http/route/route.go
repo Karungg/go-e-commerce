@@ -1,9 +1,10 @@
 package route
 
 import (
-	deliveryHttp "go-e-commerce/internal/delivery/http"
+	authCtrl "go-e-commerce/internal/delivery/http/auth"
+	categoryCtrl "go-e-commerce/internal/delivery/http/category"
 	"go-e-commerce/internal/delivery/http/middleware"
-	"go-e-commerce/internal/port"
+	authPort "go-e-commerce/internal/port/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,9 +12,9 @@ import (
 // SetupRoutes centralizes all API route registrations
 func SetupRoutes(
 	api *gin.RouterGroup,
-	authController *deliveryHttp.AuthController,
-	categoryController *deliveryHttp.CategoryController,
-	jwtAuth port.TokenValidator,
+	authController *authCtrl.AuthController,
+	categoryController *categoryCtrl.CategoryController,
+	jwtAuth authPort.TokenValidator,
 ) {
 	// Public Routes
 	auth := api.Group("/auth")

@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"go-e-commerce/internal/port"
+	authPort "go-e-commerce/internal/port/auth"
 )
 
 type JWTAuth struct {
@@ -43,7 +43,7 @@ func (j *JWTAuth) GenerateToken(userID uuid.UUID, role string) (string, error) {
 	return token.SignedString(j.secretKey)
 }
 
-func (j *JWTAuth) ValidateToken(tokenString string) (*port.TokenPayload, error) {
+func (j *JWTAuth) ValidateToken(tokenString string) (*authPort.TokenPayload, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -56,7 +56,7 @@ func (j *JWTAuth) ValidateToken(tokenString string) (*port.TokenPayload, error) 
 	}
 
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-		return &port.TokenPayload{
+		return &authPort.TokenPayload{
 			UserID: claims.UserID,
 			Role:   claims.Role,
 		}, nil
