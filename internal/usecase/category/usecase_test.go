@@ -1,15 +1,15 @@
-package usecase_test
+package category_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"go-e-commerce/internal/dto"
+	categoryDTO "go-e-commerce/internal/dto/category"
 	"go-e-commerce/internal/entity"
-	"go-e-commerce/internal/mocks"
+	categoryMock "go-e-commerce/internal/mocks/category"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/usecase"
+	categoryUC "go-e-commerce/internal/usecase/category"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -18,10 +18,10 @@ import (
 )
 
 func TestCreateCategory_Success(t *testing.T) {
-	mockRepo := new(mocks.CategoryRepositoryMock)
-	uc := usecase.NewCategoryUseCase(mockRepo)
+	mockRepo := new(categoryMock.CategoryRepositoryMock)
+	uc := categoryUC.NewCategoryUseCase(mockRepo)
 
-	req := &dto.CreateCategoryReq{
+	req := &categoryDTO.CreateCategoryReq{
 		Title:       "Electronics",
 		Description: "Gadgets",
 	}
@@ -40,8 +40,8 @@ func TestCreateCategory_Success(t *testing.T) {
 }
 
 func TestGetAllCategories_Success(t *testing.T) {
-	mockRepo := new(mocks.CategoryRepositoryMock)
-	uc := usecase.NewCategoryUseCase(mockRepo)
+	mockRepo := new(categoryMock.CategoryRepositoryMock)
+	uc := categoryUC.NewCategoryUseCase(mockRepo)
 
 	mockCategories := []*entity.Category{
 		{ID: uuid.New(), Title: "C1", Description: "D1"},
@@ -61,8 +61,8 @@ func TestGetAllCategories_Success(t *testing.T) {
 }
 
 func TestGetCategoryByID_Success(t *testing.T) {
-	mockRepo := new(mocks.CategoryRepositoryMock)
-	uc := usecase.NewCategoryUseCase(mockRepo)
+	mockRepo := new(categoryMock.CategoryRepositoryMock)
+	uc := categoryUC.NewCategoryUseCase(mockRepo)
 
 	id := uuid.New()
 	mockCategory := &entity.Category{ID: id, Title: "C1", Description: "D1"}
@@ -79,8 +79,8 @@ func TestGetCategoryByID_Success(t *testing.T) {
 }
 
 func TestGetCategoryByID_NotFound(t *testing.T) {
-	mockRepo := new(mocks.CategoryRepositoryMock)
-	uc := usecase.NewCategoryUseCase(mockRepo)
+	mockRepo := new(categoryMock.CategoryRepositoryMock)
+	uc := categoryUC.NewCategoryUseCase(mockRepo)
 
 	id := uuid.New()
 
@@ -99,13 +99,13 @@ func TestGetCategoryByID_NotFound(t *testing.T) {
 }
 
 func TestUpdateCategory_Success(t *testing.T) {
-	mockRepo := new(mocks.CategoryRepositoryMock)
-	uc := usecase.NewCategoryUseCase(mockRepo)
+	mockRepo := new(categoryMock.CategoryRepositoryMock)
+	uc := categoryUC.NewCategoryUseCase(mockRepo)
 
 	id := uuid.New()
 	mockCategory := &entity.Category{ID: id, Title: "Old", Description: "Old Desc"}
 
-	req := &dto.UpdateCategoryReq{
+	req := &categoryDTO.UpdateCategoryReq{
 		Title:       "New Title",
 		Description: "New Desc",
 	}
@@ -123,8 +123,8 @@ func TestUpdateCategory_Success(t *testing.T) {
 }
 
 func TestDeleteCategory_Success(t *testing.T) {
-	mockRepo := new(mocks.CategoryRepositoryMock)
-	uc := usecase.NewCategoryUseCase(mockRepo)
+	mockRepo := new(categoryMock.CategoryRepositoryMock)
+	uc := categoryUC.NewCategoryUseCase(mockRepo)
 
 	id := uuid.New()
 	mockCategory := &entity.Category{ID: id, Title: "C1", Description: "D1"}

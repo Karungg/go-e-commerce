@@ -1,4 +1,4 @@
-package mocks
+package category
 
 import (
 	"context"

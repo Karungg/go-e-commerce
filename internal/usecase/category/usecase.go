@@ -1,29 +1,29 @@
-package usecase
+package category
 
 import (
 	"context"
 	"errors"
 
-	"go-e-commerce/internal/dto"
+	categoryDTO "go-e-commerce/internal/dto/category"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/port"
+	categoryPort "go-e-commerce/internal/port/category"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type categoryUseCase struct {
-	categoryRepo port.CategoryRepository
+	categoryRepo categoryPort.CategoryRepository
 }
 
-func NewCategoryUseCase(categoryRepo port.CategoryRepository) port.CategoryUseCase {
+func NewCategoryUseCase(categoryRepo categoryPort.CategoryRepository) categoryPort.CategoryUseCase {
 	return &categoryUseCase{
 		categoryRepo: categoryRepo,
 	}
 }
 
-func (u *categoryUseCase) CreateCategory(ctx context.Context, req *dto.CreateCategoryReq) (*dto.CategoryRes, error) {
+func (u *categoryUseCase) CreateCategory(ctx context.Context, req *categoryDTO.CreateCategoryReq) (*categoryDTO.CategoryRes, error) {
 	category := &entity.Category{
 		ID:          uuid.New(),
 		Title:       req.Title,
@@ -34,30 +34,31 @@ func (u *categoryUseCase) CreateCategory(ctx context.Context, req *dto.CreateCat
 		return nil, err
 	}
 
-	return &dto.CategoryRes{
+	return &categoryDTO.CategoryRes{
 		ID:          category.ID,
 		Title:       category.Title,
 		Description: category.Description,
 	}, nil
 }
 
-func (u *categoryUseCase) GetAllCategories(ctx context.Context) ([]*dto.CategoryRes, error) {
+func (u *categoryUseCase) GetAllCategories(ctx context.Context) ([]*categoryDTO.CategoryRes, error) {
 	categories, err := u.categoryRepo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*dto.CategoryRes
+	var res []*categoryDTO.CategoryRes
 	for _, c := range categories {
-		res = append(res, &dto.CategoryRes{
-			ID:          c.ID, Title:       c.Title,
+		res = append(res, &categoryDTO.CategoryRes{
+			ID:          c.ID,
+			Title:       c.Title,
 			Description: c.Description,
 		})
 	}
 	return res, nil
 }
 
-func (u *categoryUseCase) GetCategoryByID(ctx context.Context, id string) (*dto.CategoryRes, error) {
+func (u *categoryUseCase) GetCategoryByID(ctx context.Context, id string) (*categoryDTO.CategoryRes, error) {
 	categoryID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, apperror.ErrBadRequest
@@ -71,14 +72,14 @@ func (u *categoryUseCase) GetCategoryByID(ctx context.Context, id string) (*dto.
 		return nil, err
 	}
 
-	return &dto.CategoryRes{
+	return &categoryDTO.CategoryRes{
 		ID:          category.ID,
 		Title:       category.Title,
 		Description: category.Description,
 	}, nil
 }
 
-func (u *categoryUseCase) UpdateCategory(ctx context.Context, id string, req *dto.UpdateCategoryReq) (*dto.CategoryRes, error) {
+func (u *categoryUseCase) UpdateCategory(ctx context.Context, id string, req *categoryDTO.UpdateCategoryReq) (*categoryDTO.CategoryRes, error) {
 	categoryID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, apperror.ErrBadRequest
@@ -99,7 +100,7 @@ func (u *categoryUseCase) UpdateCategory(ctx context.Context, id string, req *dt
 		return nil, err
 	}
 
-	return &dto.CategoryRes{
+	return &categoryDTO.CategoryRes{
 		ID:          category.ID,
 		Title:       category.Title,
 		Description: category.Description,

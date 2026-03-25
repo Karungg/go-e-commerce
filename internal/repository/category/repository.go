@@ -1,9 +1,10 @@
-package repository
+package category
 
 import (
 	"context"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/model"
+	"go-e-commerce/internal/repository"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -24,7 +25,7 @@ func (r *CategoryRepository) Create(ctx context.Context, category *entity.Catego
 		Description: category.Description,
 	}
 
-	db := ExtractTx(ctx, r.db)
+	db := repository.ExtractTx(ctx, r.db)
 	if err := db.WithContext(ctx).Create(categoryModel).Error; err != nil {
 		return err
 	}
@@ -69,7 +70,7 @@ func (r *CategoryRepository) Update(ctx context.Context, category *entity.Catego
 		Description: category.Description,
 	}
 
-	db := ExtractTx(ctx, r.db)
+	db := repository.ExtractTx(ctx, r.db)
 	if err := db.WithContext(ctx).Model(&model.CategoryModel{}).Where("id = ?", category.ID).Updates(categoryModel).Error; err != nil {
 		return err
 	}
@@ -78,7 +79,7 @@ func (r *CategoryRepository) Update(ctx context.Context, category *entity.Catego
 }
 
 func (r *CategoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	db := ExtractTx(ctx, r.db)
+	db := repository.ExtractTx(ctx, r.db)
 	if err := db.WithContext(ctx).Where("id = ?", id).Delete(&model.CategoryModel{}).Error; err != nil {
 		return err
 	}

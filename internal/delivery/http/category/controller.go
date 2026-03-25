@@ -1,29 +1,29 @@
-package http
+package category
 
 import (
 	"errors"
 	"net/http"
 
 	"go-e-commerce/internal/delivery/http/response"
-	"go-e-commerce/internal/dto"
+	categoryDTO "go-e-commerce/internal/dto/category"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/port"
+	categoryPort "go-e-commerce/internal/port/category"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CategoryController struct {
-	categoryUseCase port.CategoryUseCase
+	categoryUseCase categoryPort.CategoryUseCase
 }
 
-func NewCategoryController(categoryUseCase port.CategoryUseCase) *CategoryController {
+func NewCategoryController(categoryUseCase categoryPort.CategoryUseCase) *CategoryController {
 	return &CategoryController{
 		categoryUseCase: categoryUseCase,
 	}
 }
 
 func (c *CategoryController) Create(ctx *gin.Context) {
-	var req dto.CreateCategoryReq
+	var req categoryDTO.CreateCategoryReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
@@ -62,7 +62,7 @@ func (c *CategoryController) GetByID(ctx *gin.Context) {
 
 func (c *CategoryController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
-	var req dto.UpdateCategoryReq
+	var req categoryDTO.UpdateCategoryReq
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))

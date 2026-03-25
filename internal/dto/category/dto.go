@@ -1,4 +1,4 @@
-package dto
+package category
 
 import "github.com/google/uuid"
 
