@@ -12,6 +12,7 @@ import (
 func SetupRoutes(
 	api *gin.RouterGroup,
 	authController *deliveryHttp.AuthController,
+	categoryController *deliveryHttp.CategoryController,
 	jwtAuth port.TokenValidator,
 ) {
 	// Public Routes
@@ -22,9 +23,23 @@ func SetupRoutes(
 		auth.POST("/login", authController.Login)
 	}
 
+	categoriesPublic := api.Group("/categories")
+	{
+		categoriesPublic.GET("", categoryController.GetAll)
+		categoriesPublic.GET("/:id", categoryController.GetByID)
+	}
+
 	authProtected := api.Group("/auth")
 	authProtected.Use(middleware.RequireAuth(jwtAuth))
 	{
 		authProtected.POST("/logout", authController.Logout)
+	}
+
+	categoriesProtected := api.Group("/categories")
+	categoriesProtected.Use(middleware.RequireAuth(jwtAuth))
+	{
+		categoriesProtected.POST("", categoryController.Create)
+		categoriesProtected.PUT("/:id", categoryController.Update)
+		categoriesProtected.DELETE("/:id", categoryController.Delete)
 	}
 }

@@ -37,15 +37,18 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	customerRepo := repository.NewCustomerRepository(db)
 	sellerRepo := repository.NewSellerRepository(db)
+	categoryRepo := repository.NewCategoryRepository(db)
 	txManager := repository.NewTransactionManager(db)
 
 	authUsecase := usecase.NewAuthUseCase(txManager, logger, userRepo, customerRepo, sellerRepo, jwtAuth)
+	categoryUsecase := usecase.NewCategoryUseCase(categoryRepo)
 
 	router := gin.Default()
 	api := router.Group("/api")
 	
 	authController := delivery.NewAuthController(authUsecase)
-	route.SetupRoutes(api, authController, jwtAuth)
+	categoryController := delivery.NewCategoryController(categoryUsecase)
+	route.SetupRoutes(api, authController, categoryController, jwtAuth)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
