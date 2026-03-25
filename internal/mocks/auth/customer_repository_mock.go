@@ -1,4 +1,4 @@
-package mocks
+package auth
 
 import (
 	"context"
@@ -18,9 +18,8 @@ func (m *CustomerRepositoryMock) Create(ctx context.Context, customer *entity.Cu
 
 func (m *CustomerRepositoryMock) FindByPhone(ctx context.Context, phone string) (*entity.Customer, error) {
 	args := m.Called(ctx, phone)
-	var cust *entity.Customer
 	if args.Get(0) != nil {
-		cust = args.Get(0).(*entity.Customer)
+		return args.Get(0).(*entity.Customer), args.Error(1)
 	}
-	return cust, args.Error(1)
+	return nil, args.Error(1)
 }

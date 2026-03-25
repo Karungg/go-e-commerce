@@ -1,4 +1,4 @@
-package mocks
+package auth
 
 import (
 	"context"
@@ -18,9 +18,8 @@ func (m *SellerRepositoryMock) Create(ctx context.Context, seller *entity.Seller
 
 func (m *SellerRepositoryMock) FindByStoreName(ctx context.Context, storeName string) (*entity.Seller, error) {
 	args := m.Called(ctx, storeName)
-	var seller *entity.Seller
 	if args.Get(0) != nil {
-		seller = args.Get(0).(*entity.Seller)
+		return args.Get(0).(*entity.Seller), args.Error(1)
 	}
-	return seller, args.Error(1)
+	return nil, args.Error(1)
 }

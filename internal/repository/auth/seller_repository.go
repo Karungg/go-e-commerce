@@ -1,9 +1,10 @@
-package repository
+package auth
 
 import (
 	"context"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/model"
+	"go-e-commerce/internal/repository"
 
 	"gorm.io/gorm"
 )
@@ -26,7 +27,7 @@ func (r *SellerRepository) Create(ctx context.Context, seller *entity.Seller) er
 		IsVerified:       seller.IsVerified,
 	}
 
-	db := ExtractTx(ctx, r.db)
+	db := repository.ExtractTx(ctx, r.db)
 	if err := db.WithContext(ctx).Create(sellerModel).Error; err != nil {
 		return err
 	}

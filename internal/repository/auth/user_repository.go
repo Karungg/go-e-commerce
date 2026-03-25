@@ -1,9 +1,10 @@
-package repository
+package auth
 
 import (
 	"context"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/model"
+	"go-e-commerce/internal/repository"
 
 	"gorm.io/gorm"
 )
@@ -25,7 +26,7 @@ func (r *UserRepository) Create(ctx context.Context, user *entity.User) error {
 		IsActive: user.IsActive,
 	}
 
-	db := ExtractTx(ctx, r.db)
+	db := repository.ExtractTx(ctx, r.db)
 	if err := db.WithContext(ctx).Create(userModel).Error; err != nil {
 		return err
 	}

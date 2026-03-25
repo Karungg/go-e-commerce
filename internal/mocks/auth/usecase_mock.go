@@ -1,8 +1,9 @@
-package mocks
+package auth
 
 import (
 	"context"
-	"go-e-commerce/internal/dto"
+
+	authDTO "go-e-commerce/internal/dto/auth"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -11,17 +12,17 @@ type AuthUseCaseMock struct {
 	mock.Mock
 }
 
-func (m *AuthUseCaseMock) RegisterCustomer(ctx context.Context, req *dto.RegisterCustomerReq) (string, error) {
+func (m *AuthUseCaseMock) RegisterCustomer(ctx context.Context, req *authDTO.RegisterCustomerReq) (string, error) {
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }
 
-func (m *AuthUseCaseMock) RegisterSeller(ctx context.Context, req *dto.RegisterSellerReq) (string, error) {
+func (m *AuthUseCaseMock) RegisterSeller(ctx context.Context, req *authDTO.RegisterSellerReq) (string, error) {
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }
 
-func (m *AuthUseCaseMock) Login(ctx context.Context, req *dto.LoginReq) (string, error) {
+func (m *AuthUseCaseMock) Login(ctx context.Context, req *authDTO.LoginReq) (string, error) {
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }
@@ -30,4 +31,3 @@ func (m *AuthUseCaseMock) Logout(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }
-

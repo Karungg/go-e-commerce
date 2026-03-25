@@ -1,4 +1,4 @@
-package dto
+package auth
 
 type RegisterCustomerReq struct {
 	Email     string `json:"email" binding:"required,email,max=100"`

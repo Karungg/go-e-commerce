@@ -1,4 +1,4 @@
-package mocks
+package auth
 
 import (
 	"context"

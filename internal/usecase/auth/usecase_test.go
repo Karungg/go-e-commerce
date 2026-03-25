@@ -1,4 +1,4 @@
-package usecase_test
+package auth_test
 
 import (
 	"context"
@@ -6,13 +6,13 @@ import (
 	"log/slog"
 	"testing"
 
-	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/entity"
-	"go-e-commerce/internal/mocks"
+	authMock "go-e-commerce/internal/mocks/auth"
 	"go-e-commerce/internal/pkg/apperror"
+	authDTO "go-e-commerce/internal/dto/auth"
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
-	"go-e-commerce/internal/usecase"
+	authUC "go-e-commerce/internal/usecase/auth"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -43,15 +43,15 @@ func getDiscardLogger() *slog.Logger {
 
 func TestRegisterCustomer_Success(t *testing.T) {
 	db, sqlMock := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.RegisterCustomerReq{
+	req := &authDTO.RegisterCustomerReq{
 		Email:     "test@example.com",
 		Password:  "password123",
 		FirstName: "John",
@@ -81,15 +81,15 @@ func TestRegisterCustomer_Success(t *testing.T) {
 
 func TestRegisterCustomer_EmailExists(t *testing.T) {
 	db, _ := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.RegisterCustomerReq{
+	req := &authDTO.RegisterCustomerReq{
 		Email: "test@example.com",
 	}
 
@@ -105,15 +105,15 @@ func TestRegisterCustomer_EmailExists(t *testing.T) {
 
 func TestRegisterCustomer_PhoneExists(t *testing.T) {
 	db, _ := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.RegisterCustomerReq{
+	req := &authDTO.RegisterCustomerReq{
 		Email: "new@example.com",
 		Phone: "123456789",
 	}
@@ -132,15 +132,15 @@ func TestRegisterCustomer_PhoneExists(t *testing.T) {
 
 func TestRegisterSeller_Success(t *testing.T) {
 	db, sqlMock := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.RegisterSellerReq{
+	req := &authDTO.RegisterSellerReq{
 		Email:            "seller@example.com",
 		Password:         "password123",
 		StoreName:        "Super Store",
@@ -168,15 +168,15 @@ func TestRegisterSeller_Success(t *testing.T) {
 
 func TestRegisterSeller_StoreNameExists(t *testing.T) {
 	db, _ := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.RegisterSellerReq{
+	req := &authDTO.RegisterSellerReq{
 		Email:     "new_seller@example.com",
 		StoreName: "Super Store",
 	}
@@ -195,20 +195,19 @@ func TestRegisterSeller_StoreNameExists(t *testing.T) {
 
 func TestLogin_Success(t *testing.T) {
 	db, _ := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.LoginReq{
+	req := &authDTO.LoginReq{
 		Email:    "test@example.com",
 		Password: "password123",
 	}
 
-	// Hash the password for the mock user
 	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.MinCost)
 	hashedPassword := string(hashedBytes)
 
@@ -231,15 +230,15 @@ func TestLogin_Success(t *testing.T) {
 
 func TestLogin_UserNotFound(t *testing.T) {
 	db, _ := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.LoginReq{
+	req := &authDTO.LoginReq{
 		Email:    "notfound@example.com",
 		Password: "password123",
 	}
@@ -257,20 +256,19 @@ func TestLogin_UserNotFound(t *testing.T) {
 
 func TestLogin_InvalidPassword(t *testing.T) {
 	db, _ := setupTestDB(t)
-	userRepo := new(mocks.UserRepositoryMock)
-	customerRepo := new(mocks.CustomerRepositoryMock)
-	sellerRepo := new(mocks.SellerRepositoryMock)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
 	jwtAuth := security.NewJWTAuth("secret", 24)
 
 	txManager := repository.NewTransactionManager(db)
-	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
 
-	req := &dto.LoginReq{
+	req := &authDTO.LoginReq{
 		Email:    "test@example.com",
 		Password: "wrongpassword",
 	}
 
-	// Hash a DIFFERENT password for the mock user
 	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte("correctpassword"), bcrypt.MinCost)
 	hashedPassword := string(hashedBytes)
 
@@ -290,4 +288,3 @@ func TestLogin_InvalidPassword(t *testing.T) {
 
 	userRepo.AssertExpectations(t)
 }
-

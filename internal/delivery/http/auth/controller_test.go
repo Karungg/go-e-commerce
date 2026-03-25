@@ -1,4 +1,4 @@
-package http_test
+package auth_test
 
 import (
 	"bytes"
@@ -8,23 +8,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	delivery "go-e-commerce/internal/delivery/http"
-	"go-e-commerce/internal/dto"
-	"go-e-commerce/internal/mocks"
+	authCtrl "go-e-commerce/internal/delivery/http/auth"
+	authDTO "go-e-commerce/internal/dto/auth"
+	authMock "go-e-commerce/internal/mocks/auth"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/port"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-func setupRouter(authUsecase port.AuthUseCase) *gin.Engine {
+func setupRouter(authUsecase *authMock.AuthUseCaseMock) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	api := router.Group("/api")
-	
-	authController := delivery.NewAuthController(authUsecase)
+
+	authController := authCtrl.NewAuthController(authUsecase)
 	auth := api.Group("/auth")
 	{
 		auth.POST("/register/customer", authController.RegisterCustomer)
@@ -32,17 +31,17 @@ func setupRouter(authUsecase port.AuthUseCase) *gin.Engine {
 		auth.POST("/login", authController.Login)
 		auth.POST("/logout", authController.Logout)
 	}
-	
+
 	return router
 }
 
 func TestRegisterCustomer_Success(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*dto.RegisterCustomerReq")).Return("mock.jwt.token", nil)
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*auth.RegisterCustomerReq")).Return("mock.jwt.token", nil)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := dto.RegisterCustomerReq{
+	reqBody := authDTO.RegisterCustomerReq{
 		Email:     "cust@example.com",
 		Password:  "password",
 		FirstName: "John",
@@ -57,13 +56,13 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "customer registered successfully", res["message"])
-	
+
 	data := res["data"].(map[string]interface{})
 	assert.Equal(t, "mock.jwt.token", data["token"])
 
@@ -71,7 +70,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 }
 
 func TestRegisterCustomer_InvalidJSON(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
+	mockUsecase := new(authMock.AuthUseCaseMock)
 	router := setupRouter(mockUsecase)
 
 	req, _ := http.NewRequest(http.MethodPost, "/api/auth/register/customer", bytes.NewBuffer([]byte("{invalid json")))
@@ -84,20 +83,19 @@ func TestRegisterCustomer_InvalidJSON(t *testing.T) {
 
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "error", res["status"])
 	assert.Equal(t, "Invalid request payload", res["message"])
 	assert.NotNil(t, res["errors"])
 }
 
 func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
-	// Inject the strictly handled Domain Error dictating 409 boundaries natively
-	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*dto.RegisterCustomerReq")).Return("", apperror.ErrEmailConflict)
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("RegisterCustomer", mock.Anything, mock.AnythingOfType("*auth.RegisterCustomerReq")).Return("", apperror.ErrEmailConflict)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := dto.RegisterCustomerReq{
+	reqBody := authDTO.RegisterCustomerReq{
 		Email:     "cust@example.com",
 		Password:  "password",
 		FirstName: "John",
@@ -112,10 +110,10 @@ func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusConflict, w.Code)
-	
+
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "error", res["status"])
 	assert.Equal(t, "Registration failed", res["message"])
 	assert.Equal(t, apperror.ErrEmailConflict.Message, res["errors"])
@@ -123,12 +121,12 @@ func TestRegisterCustomer_UsecaseErrorConflict(t *testing.T) {
 }
 
 func TestRegisterSeller_Success(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("RegisterSeller", mock.Anything, mock.AnythingOfType("*dto.RegisterSellerReq")).Return("mock.jwt.token", nil)
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("RegisterSeller", mock.Anything, mock.AnythingOfType("*auth.RegisterSellerReq")).Return("mock.jwt.token", nil)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := dto.RegisterSellerReq{
+	reqBody := authDTO.RegisterSellerReq{
 		Email:            "seller@example.com",
 		Password:         "password",
 		StoreName:        "Awesome Store",
@@ -143,13 +141,13 @@ func TestRegisterSeller_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "seller registered successfully", res["message"])
-	
+
 	data := res["data"].(map[string]interface{})
 	assert.Equal(t, "mock.jwt.token", data["token"])
 
@@ -157,12 +155,12 @@ func TestRegisterSeller_Success(t *testing.T) {
 }
 
 func TestLogin_Success(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("Login", mock.Anything, mock.AnythingOfType("*dto.LoginReq")).Return("mock.login.token", nil)
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("Login", mock.Anything, mock.AnythingOfType("*auth.LoginReq")).Return("mock.login.token", nil)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := dto.LoginReq{
+	reqBody := authDTO.LoginReq{
 		Email:    "test@example.com",
 		Password: "password123",
 	}
@@ -175,13 +173,13 @@ func TestLogin_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "login successful", res["message"])
-	
+
 	data := res["data"].(map[string]interface{})
 	assert.Equal(t, "mock.login.token", data["token"])
 
@@ -189,7 +187,7 @@ func TestLogin_Success(t *testing.T) {
 }
 
 func TestLogin_InvalidJSON(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
+	mockUsecase := new(authMock.AuthUseCaseMock)
 	router := setupRouter(mockUsecase)
 
 	req, _ := http.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBuffer([]byte(`{invalid json`)))
@@ -202,19 +200,19 @@ func TestLogin_InvalidJSON(t *testing.T) {
 
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "error", res["status"])
 	assert.Equal(t, "Invalid request payload", res["message"])
 	assert.NotNil(t, res["errors"])
 }
 
 func TestLogin_UsecaseError(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
-	mockUsecase.On("Login", mock.Anything, mock.AnythingOfType("*dto.LoginReq")).Return("", apperror.ErrInvalidPassword)
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("Login", mock.Anything, mock.AnythingOfType("*auth.LoginReq")).Return("", apperror.ErrInvalidPassword)
 
 	router := setupRouter(mockUsecase)
 
-	reqBody := dto.LoginReq{
+	reqBody := authDTO.LoginReq{
 		Email:    "test@example.com",
 		Password: "wrongpassword",
 	}
@@ -227,10 +225,10 @@ func TestLogin_UsecaseError(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	
+
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "error", res["status"])
 	assert.Equal(t, "Login failed", res["message"])
 	assert.Equal(t, apperror.ErrInvalidPassword.Message, res["errors"])
@@ -239,7 +237,7 @@ func TestLogin_UsecaseError(t *testing.T) {
 }
 
 func TestLogout_Success(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
+	mockUsecase := new(authMock.AuthUseCaseMock)
 	mockUsecase.On("Logout", mock.Anything).Return(nil)
 
 	router := setupRouter(mockUsecase)
@@ -250,18 +248,18 @@ func TestLogout_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	
+
 	assert.Equal(t, "success", res["status"])
 	assert.Equal(t, "logout successful", res["message"])
-	
+
 	mockUsecase.AssertExpectations(t)
 }
 
 func TestLogout_UsecaseError(t *testing.T) {
-	mockUsecase := new(mocks.AuthUseCaseMock)
+	mockUsecase := new(authMock.AuthUseCaseMock)
 	mockUsecase.On("Logout", mock.Anything).Return(errors.New("db disconnect"))
 
 	router := setupRouter(mockUsecase)
@@ -272,6 +270,6 @@ func TestLogout_UsecaseError(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	
+
 	mockUsecase.AssertExpectations(t)
 }

@@ -1,29 +1,29 @@
-package http
+package auth
 
 import (
 	"errors"
 	"net/http"
 
+	authDTO "go-e-commerce/internal/dto/auth"
 	"go-e-commerce/internal/delivery/http/response"
-	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/port"
+	authPort "go-e-commerce/internal/port/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AuthController struct {
-	authUsecase port.AuthUseCase
+	authUsecase authPort.AuthUseCase
 }
 
-func NewAuthController(authUsecase port.AuthUseCase) *AuthController {
+func NewAuthController(authUsecase authPort.AuthUseCase) *AuthController {
 	return &AuthController{
 		authUsecase: authUsecase,
 	}
 }
 
 func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
-	var req dto.RegisterCustomerReq
+	var req authDTO.RegisterCustomerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
@@ -46,7 +46,7 @@ func (c *AuthController) RegisterCustomer(ctx *gin.Context) {
 }
 
 func (c *AuthController) RegisterSeller(ctx *gin.Context) {
-	var req dto.RegisterSellerReq
+	var req authDTO.RegisterSellerReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return
@@ -69,7 +69,7 @@ func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 }
 
 func (c *AuthController) Login(ctx *gin.Context) {
-	var req dto.LoginReq
+	var req authDTO.LoginReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
 		return

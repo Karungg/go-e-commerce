@@ -1,40 +1,40 @@
-package usecase
+package auth
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
 
-	"go-e-commerce/internal/dto"
+	authDTO "go-e-commerce/internal/dto/auth"
 	"go-e-commerce/internal/entity"
 	"go-e-commerce/internal/pkg/apperror"
-	"go-e-commerce/internal/port"
+	authPort "go-e-commerce/internal/port/auth"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type authUseCase struct {
-	txManager    port.TransactionManager
-	logger       *slog.Logger
-	userRepo     port.UserRepository
-	customerRepo   port.CustomerRepository
-	sellerRepo     port.SellerRepository
-	tokenGenerator port.TokenGenerator
+	txManager      authPort.TransactionManager
+	logger         *slog.Logger
+	userRepo       authPort.UserRepository
+	customerRepo   authPort.CustomerRepository
+	sellerRepo     authPort.SellerRepository
+	tokenGenerator authPort.TokenGenerator
 }
 
 func NewAuthUseCase(
-	txManager port.TransactionManager,
+	txManager authPort.TransactionManager,
 	logger *slog.Logger,
-	userRepo port.UserRepository,
-	customerRepo port.CustomerRepository,
-	sellerRepo port.SellerRepository,
-	tokenGenerator port.TokenGenerator,
-) port.AuthUseCase {
+	userRepo authPort.UserRepository,
+	customerRepo authPort.CustomerRepository,
+	sellerRepo authPort.SellerRepository,
+	tokenGenerator authPort.TokenGenerator,
+) authPort.AuthUseCase {
 	return &authUseCase{
-		txManager:    txManager,
-		logger:       logger,
-		userRepo:     userRepo,
+		txManager:      txManager,
+		logger:         logger,
+		userRepo:       userRepo,
 		customerRepo:   customerRepo,
 		sellerRepo:     sellerRepo,
 		tokenGenerator: tokenGenerator,
@@ -53,7 +53,7 @@ func (u *authUseCase) comparePassword(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-func (u *authUseCase) Login(ctx context.Context, req *dto.LoginReq) (string, error) {
+func (u *authUseCase) Login(ctx context.Context, req *authDTO.LoginReq) (string, error) {
 	user, err := u.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil || user == nil {
 		u.logger.WarnContext(ctx, "Login failed: user not found", slog.String("email", req.Email))
@@ -80,9 +80,7 @@ func (u *authUseCase) Logout(ctx context.Context) error {
 	return nil
 }
 
-
-
-func (u *authUseCase) RegisterCustomer(ctx context.Context, req *dto.RegisterCustomerReq) (string, error) {
+func (u *authUseCase) RegisterCustomer(ctx context.Context, req *authDTO.RegisterCustomerReq) (string, error) {
 	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
 		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
@@ -146,7 +144,7 @@ func (u *authUseCase) RegisterCustomer(ctx context.Context, req *dto.RegisterCus
 	return token, nil
 }
 
-func (u *authUseCase) RegisterSeller(ctx context.Context, req *dto.RegisterSellerReq) (string, error) {
+func (u *authUseCase) RegisterSeller(ctx context.Context, req *authDTO.RegisterSellerReq) (string, error) {
 	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
 		u.logger.WarnContext(ctx, "Registration failed due to email conflict", slog.String("email", req.Email))
