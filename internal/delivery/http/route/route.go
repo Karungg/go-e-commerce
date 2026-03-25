@@ -18,6 +18,7 @@ func SetupRoutes(
 	{
 		auth.POST("/register/customer", authController.RegisterCustomer)
 		auth.POST("/register/seller", authController.RegisterSeller)
+		auth.POST("/login", authController.Login)
 	}
 
 }

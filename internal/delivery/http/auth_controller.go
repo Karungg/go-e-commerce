@@ -68,3 +68,25 @@ func (c *AuthController) RegisterSeller(ctx *gin.Context) {
 	response.Success(ctx, http.StatusCreated, "seller registered successfully", gin.H{"token": token})
 }
 
+func (c *AuthController) Login(ctx *gin.Context) {
+	var req dto.LoginReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.Error(ctx, http.StatusBadRequest, "Invalid request payload", apperror.FormatValidationError(err))
+		return
+	}
+
+	token, err := c.authUsecase.Login(ctx.Request.Context(), &req)
+	if err != nil {
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			status := response.MapAppErrorToHTTPStatus(appErr)
+			response.Error(ctx, status, "Login failed", appErr.Message)
+			return
+		}
+
+		response.Error(ctx, http.StatusInternalServerError, "Internal server error", err.Error())
+		return
+	}
+
+	response.Success(ctx, http.StatusOK, "login successful", gin.H{"token": token})
+}
