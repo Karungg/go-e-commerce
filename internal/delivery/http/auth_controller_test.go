@@ -3,14 +3,15 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	delivery "go-e-commerce/internal/delivery/http"
 	"go-e-commerce/internal/dto"
 	"go-e-commerce/internal/mocks"
 	"go-e-commerce/internal/pkg/apperror"
 	"go-e-commerce/internal/port"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

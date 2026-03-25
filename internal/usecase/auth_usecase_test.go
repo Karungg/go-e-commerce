@@ -13,8 +13,10 @@ import (
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
 	"go-e-commerce/internal/usecase"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/postgres"
@@ -190,3 +192,102 @@ func TestRegisterSeller_StoreNameExists(t *testing.T) {
 	assert.ErrorIs(t, err, apperror.ErrStoreNameConflict)
 	assert.Empty(t, token)
 }
+
+func TestLogin_Success(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(mocks.UserRepositoryMock)
+	customerRepo := new(mocks.CustomerRepositoryMock)
+	sellerRepo := new(mocks.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	req := &dto.LoginReq{
+		Email:    "test@example.com",
+		Password: "password123",
+	}
+
+	// Hash the password for the mock user
+	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.MinCost)
+	hashedPassword := string(hashedBytes)
+
+	mockUser := &entity.User{
+		ID:       uuid.New(), 
+		Email:    req.Email,
+		Password: hashedPassword,
+		Role:     entity.RoleCustomer,
+	}
+
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(mockUser, nil)
+
+	token, err := uc.Login(context.Background(), req)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, token)
+
+	userRepo.AssertExpectations(t)
+}
+
+func TestLogin_UserNotFound(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(mocks.UserRepositoryMock)
+	customerRepo := new(mocks.CustomerRepositoryMock)
+	sellerRepo := new(mocks.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	req := &dto.LoginReq{
+		Email:    "notfound@example.com",
+		Password: "password123",
+	}
+
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
+
+	token, err := uc.Login(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrInvalidPassword)
+	assert.Empty(t, token)
+
+	userRepo.AssertExpectations(t)
+}
+
+func TestLogin_InvalidPassword(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(mocks.UserRepositoryMock)
+	customerRepo := new(mocks.CustomerRepositoryMock)
+	sellerRepo := new(mocks.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := usecase.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	req := &dto.LoginReq{
+		Email:    "test@example.com",
+		Password: "wrongpassword",
+	}
+
+	// Hash a DIFFERENT password for the mock user
+	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte("correctpassword"), bcrypt.MinCost)
+	hashedPassword := string(hashedBytes)
+
+	mockUser := &entity.User{
+		Email:    req.Email,
+		Password: hashedPassword,
+		Role:     entity.RoleCustomer,
+	}
+
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(mockUser, nil)
+
+	token, err := uc.Login(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrInvalidPassword)
+	assert.Empty(t, token)
+
+	userRepo.AssertExpectations(t)
+}
+

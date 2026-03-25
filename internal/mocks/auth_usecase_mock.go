@@ -21,3 +21,7 @@ func (m *AuthUseCaseMock) RegisterSeller(ctx context.Context, req *dto.RegisterS
 	return args.String(0), args.Error(1)
 }
 
+func (m *AuthUseCaseMock) Login(ctx context.Context, req *dto.LoginReq) (string, error) {
+	args := m.Called(ctx, req)
+	return args.String(0), args.Error(1)
+}
