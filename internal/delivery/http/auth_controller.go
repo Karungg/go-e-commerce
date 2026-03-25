@@ -90,3 +90,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	response.Success(ctx, http.StatusOK, "login successful", gin.H{"token": token})
 }
+
+func (c *AuthController) Logout(ctx *gin.Context) {
+	err := c.authUsecase.Logout(ctx.Request.Context())
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Internal server error", err.Error())
+		return
+	}
+
+	response.Success(ctx, http.StatusOK, "logout successful", nil)
+}

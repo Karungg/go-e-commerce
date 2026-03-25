@@ -2,6 +2,7 @@ package route
 
 import (
 	deliveryHttp "go-e-commerce/internal/delivery/http"
+	"go-e-commerce/internal/delivery/http/middleware"
 	"go-e-commerce/internal/port"
 
 	"github.com/gin-gonic/gin"
@@ -21,4 +22,9 @@ func SetupRoutes(
 		auth.POST("/login", authController.Login)
 	}
 
+	authProtected := api.Group("/auth")
+	authProtected.Use(middleware.RequireAuth(jwtAuth))
+	{
+		authProtected.POST("/logout", authController.Logout)
+	}
 }
