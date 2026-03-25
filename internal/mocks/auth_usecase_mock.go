@@ -25,3 +25,9 @@ func (m *AuthUseCaseMock) Login(ctx context.Context, req *dto.LoginReq) (string,
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }
+
+func (m *AuthUseCaseMock) Logout(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
