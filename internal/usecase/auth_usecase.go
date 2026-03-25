@@ -49,6 +49,33 @@ func (u *authUseCase) hashPassword(password string) (string, error) {
 	return string(bytes), nil
 }
 
+func (u *authUseCase) comparePassword(hashedPassword, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+func (u *authUseCase) Login(ctx context.Context, req *dto.LoginReq) (string, error) {
+	user, err := u.userRepo.FindByEmail(ctx, req.Email)
+	if err != nil || user == nil {
+		u.logger.WarnContext(ctx, "Login failed: user not found", slog.String("email", req.Email))
+		return "", apperror.ErrInvalidPassword
+	}
+
+	if err := u.comparePassword(user.Password, req.Password); err != nil {
+		u.logger.WarnContext(ctx, "Login failed: invalid password", slog.String("email", req.Email))
+		return "", apperror.ErrInvalidPassword
+	}
+
+	token, err := u.tokenGenerator.GenerateToken(user.ID, string(user.Role))
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Failed to generate JWT", slog.Any("error", err))
+		return "", fmt.Errorf("failed to generate authentication token: %w", err)
+	}
+
+	u.logger.InfoContext(ctx, "User logged in successfully", slog.String("user_id", user.ID.String()))
+	return token, nil
+}
+
+
 func (u *authUseCase) RegisterCustomer(ctx context.Context, req *dto.RegisterCustomerReq) (string, error) {
 	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
 	if existingUser != nil {

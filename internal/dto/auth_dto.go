@@ -16,3 +16,8 @@ type RegisterSellerReq struct {
 	StoreDescription string `json:"store_description" binding:"omitempty,max=500"`
 	LogoUrl          string `json:"logo_url" binding:"omitempty,url,max=255"`
 }
+
+type LoginReq struct {
+	Email    string `json:"email" binding:"required,email,max=100"`
+	Password string `json:"password" binding:"required,min=8,max=64"`
+}
