@@ -75,6 +75,12 @@ func (u *authUseCase) Login(ctx context.Context, req *dto.LoginReq) (string, err
 	return token, nil
 }
 
+func (u *authUseCase) Logout(ctx context.Context) error {
+	u.logger.InfoContext(ctx, "User logged out successfully")
+	return nil
+}
+
+
 
 func (u *authUseCase) RegisterCustomer(ctx context.Context, req *dto.RegisterCustomerReq) (string, error) {
 	existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
