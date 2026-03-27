@@ -34,6 +34,9 @@ var (
 	// Category Errors
 	ErrCategoryNotFound  = &AppError{CodeNotFound, "category not found"}
 
+	// Product Errors
+	ErrProductNotFound   = &AppError{CodeNotFound, "product not found"}
+
 	// System Errors
 	ErrBadRequest = &AppError{CodeBadRequest, "invalid request"}
 	ErrInternal   = &AppError{CodeInternal, "internal server error"}
