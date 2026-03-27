@@ -13,13 +13,16 @@ import (
 	"go-e-commerce/internal/config"
 	authCtrl "go-e-commerce/internal/delivery/http/auth"
 	categoryCtrl "go-e-commerce/internal/delivery/http/category"
+	productCtrl "go-e-commerce/internal/delivery/http/product"
 	"go-e-commerce/internal/delivery/http/route"
 	authRepo "go-e-commerce/internal/repository/auth"
 	categoryRepo "go-e-commerce/internal/repository/category"
+	productRepo "go-e-commerce/internal/repository/product"
 	"go-e-commerce/internal/repository"
 	"go-e-commerce/internal/security"
 	authUC "go-e-commerce/internal/usecase/auth"
 	categoryUC "go-e-commerce/internal/usecase/category"
+	productUC "go-e-commerce/internal/usecase/product"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,17 +45,20 @@ func main() {
 	customerRepo := authRepo.NewCustomerRepository(db)
 	sellerRepo := authRepo.NewSellerRepository(db)
 	catRepo := categoryRepo.NewCategoryRepository(db)
+	prodRepo := productRepo.NewProductRepository(db)
 	txManager := repository.NewTransactionManager(db)
 
 	authUsecase := authUC.NewAuthUseCase(txManager, logger, userRepo, customerRepo, sellerRepo, jwtAuth)
 	categoryUsecase := categoryUC.NewCategoryUseCase(catRepo)
+	productUsecase := productUC.NewProductUseCase(prodRepo)
 
 	router := gin.Default()
 	api := router.Group("/api")
 	
 	authController := authCtrl.NewAuthController(authUsecase)
 	categoryController := categoryCtrl.NewCategoryController(categoryUsecase)
-	route.SetupRoutes(api, authController, categoryController, jwtAuth)
+	productController := productCtrl.NewProductController(productUsecase)
+	route.SetupRoutes(api, authController, categoryController, productController, jwtAuth)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
