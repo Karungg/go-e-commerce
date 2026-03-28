@@ -55,13 +55,14 @@ func TestGetAllProducts_Success(t *testing.T) {
 		{ID: uuid.New(), Title: "P2", Price: 200},
 	}
 
-	mockRepo.On("FindAll", mock.Anything).Return(mockProducts, nil)
+	mockRepo.On("FindAll", mock.Anything, 10, 0).Return(mockProducts, int64(2), nil)
 
-	res, err := uc.GetAllProducts(context.Background())
+	res, total, err := uc.GetAllProducts(context.Background(), 1, 10)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.Len(t, res, 2)
+	assert.Equal(t, int64(2), total)
 	assert.Equal(t, mockProducts[0].Title, res[0].Title)
 
 	mockRepo.AssertExpectations(t)

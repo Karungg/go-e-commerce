@@ -79,9 +79,9 @@ func TestCreateProduct_Success(t *testing.T) {
 func TestGetAllProducts_Success(t *testing.T) {
 	mockUC := new(productMock.ProductUseCaseMock)
 
-	mockUC.On("GetAllProducts", mock.Anything).Return([]*productDTO.ProductRes{
+	mockUC.On("GetAllProducts", mock.Anything, 1, 10).Return([]*productDTO.ProductRes{
 		{ID: uuid.New(), Title: "P1", Price: 100},
-	}, nil)
+	}, int64(1), nil)
 
 	router := setupProductRouter(mockUC)
 
@@ -91,6 +91,18 @@ func TestGetAllProducts_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	
+	var res map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &res)
+	assert.Equal(t, "success", res["status"])
+	
+	meta, ok := res["meta"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(1), meta["page"])
+	assert.Equal(t, float64(10), meta["limit"])
+	assert.Equal(t, float64(1), meta["total_items"])
+	assert.Equal(t, float64(1), meta["total_pages"])
+	
 	mockUC.AssertExpectations(t)
 }
 

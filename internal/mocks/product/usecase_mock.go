@@ -20,12 +20,12 @@ func (m *ProductUseCaseMock) CreateProduct(ctx context.Context, req *productDTO.
 	return nil, args.Error(1)
 }
 
-func (m *ProductUseCaseMock) GetAllProducts(ctx context.Context) ([]*productDTO.ProductRes, error) {
-	args := m.Called(ctx)
+func (m *ProductUseCaseMock) GetAllProducts(ctx context.Context, page, limit int) ([]*productDTO.ProductRes, int64, error) {
+	args := m.Called(ctx, page, limit)
 	if args.Get(0) != nil {
-		return args.Get(0).([]*productDTO.ProductRes), args.Error(1)
+		return args.Get(0).([]*productDTO.ProductRes), args.Get(1).(int64), args.Error(2)
 	}
-	return nil, args.Error(1)
+	return nil, args.Get(1).(int64), args.Error(2)
 }
 
 func (m *ProductUseCaseMock) GetProductByID(ctx context.Context, id string) (*productDTO.ProductRes, error) {
