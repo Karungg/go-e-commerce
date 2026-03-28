@@ -58,10 +58,11 @@ func (u *productUseCase) CreateProduct(ctx context.Context, req *productDTO.Crea
 	}, nil
 }
 
-func (u *productUseCase) GetAllProducts(ctx context.Context) ([]*productDTO.ProductRes, error) {
-	products, err := u.productRepo.FindAll(ctx)
+func (u *productUseCase) GetAllProducts(ctx context.Context, page, limit int) ([]*productDTO.ProductRes, int64, error) {
+	offset := (page - 1) * limit
+	products, total, err := u.productRepo.FindAll(ctx, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var res []*productDTO.ProductRes
@@ -83,7 +84,7 @@ func (u *productUseCase) GetAllProducts(ctx context.Context) ([]*productDTO.Prod
 		res = make([]*productDTO.ProductRes, 0)
 	}
 
-	return res, nil
+	return res, total, nil
 }
 
 func (u *productUseCase) GetProductByID(ctx context.Context, id string) (*productDTO.ProductRes, error) {

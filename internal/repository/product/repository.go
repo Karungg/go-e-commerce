@@ -39,10 +39,15 @@ func (r *ProductRepository) Create(ctx context.Context, product *entity.Product)
 	return nil
 }
 
-func (r *ProductRepository) FindAll(ctx context.Context) ([]*entity.Product, error) {
+func (r *ProductRepository) FindAll(ctx context.Context, limit, offset int) ([]*entity.Product, int64, error) {
+	var total int64
+	if err := r.db.WithContext(ctx).Model(&model.ProductModel{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	var productModels []model.ProductModel
-	if err := r.db.WithContext(ctx).Find(&productModels).Error; err != nil {
-		return nil, err
+	if err := r.db.WithContext(ctx).Limit(limit).Offset(offset).Find(&productModels).Error; err != nil {
+		return nil, 0, err
 	}
 
 	products := make([]*entity.Product, len(productModels))
@@ -59,7 +64,7 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]*entity.Product, err
 			Status:      m.Status,
 		}
 	}
-	return products, nil
+	return products, total, nil
 }
 
 func (r *ProductRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
