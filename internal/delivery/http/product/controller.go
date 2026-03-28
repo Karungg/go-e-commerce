@@ -2,7 +2,9 @@ package product
 
 import (
 	"errors"
+	"math"
 	"net/http"
+	"strconv"
 
 	"go-e-commerce/internal/delivery/http/response"
 	productDTO "go-e-commerce/internal/dto/product"
@@ -39,13 +41,34 @@ func (c *ProductController) Create(ctx *gin.Context) {
 }
 
 func (c *ProductController) GetAll(ctx *gin.Context) {
-	res, err := c.productUseCase.GetAllProducts(ctx.Request.Context())
+	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	res, total, err := c.productUseCase.GetAllProducts(ctx.Request.Context(), page, limit)
 	if err != nil {
 		c.handleError(ctx, err)
 		return
 	}
 
-	response.Success(ctx, http.StatusOK, "Products fetched successfully", res)
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+	meta := &response.PaginationMeta{
+		Page:       page,
+		Limit:      limit,
+		TotalItems: int(total),
+		TotalPages: totalPages,
+	}
+
+	response.SuccessWithMeta(ctx, http.StatusOK, "Products fetched successfully", res, meta)
 }
 
 func (c *ProductController) GetByID(ctx *gin.Context) {
