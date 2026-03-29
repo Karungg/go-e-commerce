@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes centralizes all API route registrations
 func SetupRoutes(
 	api *gin.RouterGroup,
 	authController *authCtrl.AuthController,
@@ -18,7 +17,6 @@ func SetupRoutes(
 	productController *productCtrl.ProductController,
 	jwtAuth authPort.TokenValidator,
 ) {
-	// Public Routes
 	auth := api.Group("/auth")
 	{
 		auth.POST("/register/customer", authController.RegisterCustomer)

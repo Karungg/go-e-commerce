@@ -10,7 +10,6 @@ import (
 	productDTO "go-e-commerce/internal/dto/product"
 )
 
-// ProductRepository defines the contract for product data access
 type ProductRepository interface {
 	Create(ctx context.Context, product *entity.Product) error
 	FindAll(ctx context.Context, limit, offset int) ([]*entity.Product, int64, error)
@@ -19,7 +18,6 @@ type ProductRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
-// ProductUseCase defines the contract for product business logic
 type ProductUseCase interface {
 	CreateProduct(ctx context.Context, req *productDTO.CreateProductReq) (*productDTO.ProductRes, error)
 	GetAllProducts(ctx context.Context, page, limit int) ([]*productDTO.ProductRes, int64, error)

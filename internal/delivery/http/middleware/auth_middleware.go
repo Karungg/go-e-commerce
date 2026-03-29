@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RequireAuth is a middleware that validates the JWT token
 func RequireAuth(jwtAuth authPort.TokenValidator) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -34,14 +33,12 @@ func RequireAuth(jwtAuth authPort.TokenValidator) gin.HandlerFunc {
 			return
 		}
 
-		// Set user identity to context
 		c.Set("userID", claims.UserID)
 		c.Set("role", claims.Role)
 		c.Next()
 	}
 }
 
-// RequireRole is a middleware that enforces role-based access control
 func RequireRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userRole, exists := c.Get("role")

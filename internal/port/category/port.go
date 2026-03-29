@@ -10,7 +10,6 @@ import (
 	categoryDTO "go-e-commerce/internal/dto/category"
 )
 
-// CategoryRepository defines the contract for category data access
 type CategoryRepository interface {
 	Create(ctx context.Context, category *entity.Category) error
 	FindAll(ctx context.Context) ([]*entity.Category, error)
@@ -19,7 +18,6 @@ type CategoryRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
-// CategoryUseCase defines the contract for category business logic
 type CategoryUseCase interface {
 	CreateCategory(ctx context.Context, req *categoryDTO.CreateCategoryReq) (*categoryDTO.CategoryRes, error)
 	GetAllCategories(ctx context.Context) ([]*categoryDTO.CategoryRes, error)

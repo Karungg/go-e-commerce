@@ -12,7 +12,6 @@ type FieldError struct {
 	Message string `json:"message"`
 }
 
-// FormatValidationError maps Gin validation errors to a structured format.
 func FormatValidationError(err error) interface{} {
 	var ve validator.ValidationErrors
 	if errors.As(err, &ve) {
@@ -25,7 +24,6 @@ func FormatValidationError(err error) interface{} {
 		}
 		return out
 	}
-	// Fallback to raw error string
 	return err.Error()
 }
 

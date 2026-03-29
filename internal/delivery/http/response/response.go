@@ -7,7 +7,6 @@ import (
 	"go-e-commerce/internal/pkg/apperror"
 )
 
-// PaginationMeta contains pagination details
 type PaginationMeta struct {
 	Page       int `json:"page"`
 	Limit      int `json:"limit"`
@@ -15,17 +14,15 @@ type PaginationMeta struct {
 	TotalPages int `json:"total_pages"`
 }
 
-// WebResponse represents a standardized API payload structure widely recognized by frontend clients
 type WebResponse struct {
 	Code    int             `json:"code"`
-	Status  string          `json:"status"`   // "success", "error"
+	Status  string          `json:"status"` 
 	Message string          `json:"message"`
 	Data    interface{}     `json:"data,omitempty"`
 	Meta    *PaginationMeta `json:"meta,omitempty"`
 	Errors  interface{}     `json:"errors,omitempty"`
 }
 
-// Success serves a canonical HTTP 20X payload with "status": "success"
 func Success(ctx *gin.Context, code int, message string, data interface{}) {
 	ctx.JSON(code, WebResponse{
 		Code:    code,
@@ -35,7 +32,6 @@ func Success(ctx *gin.Context, code int, message string, data interface{}) {
 	})
 }
 
-// SuccessWithMeta serves a canonical HTTP 20X payload with "status": "success" and pagination metadata
 func SuccessWithMeta(ctx *gin.Context, code int, message string, data interface{}, meta *PaginationMeta) {
 	ctx.JSON(code, WebResponse{
 		Code:    code,
@@ -46,7 +42,6 @@ func SuccessWithMeta(ctx *gin.Context, code int, message string, data interface{
 	})
 }
 
-// Error serves a canonical HTTP 40X or 50X payload with "status": "error"
 func Error(ctx *gin.Context, code int, message string, errors interface{}) {
 	ctx.JSON(code, WebResponse{
 		Code:    code,
@@ -56,7 +51,6 @@ func Error(ctx *gin.Context, code int, message string, errors interface{}) {
 	})
 }
 
-// MapAppErrorToHTTPStatus converts an app domain error code to an HTTP status code
 func MapAppErrorToHTTPStatus(appErr *apperror.AppError) int {
 	switch appErr.Code {
 	case apperror.CodeConflict:

@@ -1,6 +1,5 @@
 package apperror
 
-// ErrorCode is a domain-specific string code for an error
 type ErrorCode string
 
 const (
@@ -11,13 +10,11 @@ const (
 	CodeInternal           ErrorCode = "INTERNAL_ERROR"
 )
 
-// AppError represents a predefined domain error
 type AppError struct {
 	Code    ErrorCode `json:"code"`
 	Message string    `json:"message"`
 }
 
-// Error implements the error interface
 func (e *AppError) Error() string {
 	return e.Message
 }

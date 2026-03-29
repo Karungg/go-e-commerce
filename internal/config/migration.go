@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// RunMigrations executes database migrations automatically using the embedded SQL files
 func RunMigrations(gormDB *gorm.DB) {
 	sqlDB, err := gormDB.DB()
 	if err != nil {
