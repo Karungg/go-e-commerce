@@ -6,6 +6,7 @@ import (
 	"go-e-commerce/internal/model"
 	"go-e-commerce/internal/repository"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -53,4 +54,42 @@ func (r *CustomerRepository) FindByPhone(ctx context.Context, phone string) (*en
 		CreatedAt: customerModel.CreatedAt,
 		UpdatedAt: customerModel.UpdatedAt,
 	}, nil
+}
+
+func (r *CustomerRepository) FindByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+	var customerModel model.CustomerModel
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&customerModel).Error; err != nil {
+		return nil, err
+	}
+
+	return &entity.Customer{
+		ID:        customerModel.ID,
+		UserID:    customerModel.UserID,
+		FirstName: customerModel.FirstName,
+		LastName:  customerModel.LastName,
+		Phone:     customerModel.Phone,
+		Address:   customerModel.Address,
+		CreatedAt: customerModel.CreatedAt,
+		UpdatedAt: customerModel.UpdatedAt,
+	}, nil
+}
+
+func (r *CustomerRepository) Update(ctx context.Context, customer *entity.Customer) error {
+	customerModel := &model.CustomerModel{
+		ID:        customer.ID,
+		UserID:    customer.UserID,
+		FirstName: customer.FirstName,
+		LastName:  customer.LastName,
+		Phone:     customer.Phone,
+		Address:   customer.Address,
+		CreatedAt: customer.CreatedAt,
+	}
+
+	db := repository.ExtractTx(ctx, r.db)
+	if err := db.WithContext(ctx).Save(customerModel).Error; err != nil {
+		return err
+	}
+
+	customer.UpdatedAt = customerModel.UpdatedAt
+	return nil
 }

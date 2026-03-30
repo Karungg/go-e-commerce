@@ -4,6 +4,7 @@ import (
 	"context"
 	"go-e-commerce/internal/entity"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -22,4 +23,17 @@ func (m *CustomerRepositoryMock) FindByPhone(ctx context.Context, phone string) 
 		return args.Get(0).(*entity.Customer), args.Error(1)
 	}
 	return nil, args.Error(1)
+}
+
+func (m *CustomerRepositoryMock) FindByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) != nil {
+		return args.Get(0).(*entity.Customer), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *CustomerRepositoryMock) Update(ctx context.Context, customer *entity.Customer) error {
+	args := m.Called(ctx, customer)
+	return args.Error(0)
 }
