@@ -5,6 +5,7 @@ import (
 
 	authDTO "go-e-commerce/internal/dto/auth"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -29,5 +30,10 @@ func (m *AuthUseCaseMock) Login(ctx context.Context, req *authDTO.LoginReq) (str
 
 func (m *AuthUseCaseMock) Logout(ctx context.Context) error {
 	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *AuthUseCaseMock) UpdateCustomer(ctx context.Context, userID uuid.UUID, req *authDTO.UpdateCustomerReq) error {
+	args := m.Called(ctx, userID, req)
 	return args.Error(0)
 }

@@ -288,3 +288,103 @@ func TestLogin_InvalidPassword(t *testing.T) {
 
 	userRepo.AssertExpectations(t)
 }
+
+func TestUpdateCustomer_Success(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	userID := uuid.New()
+	customerID := uuid.New()
+	req := &authDTO.UpdateCustomerReq{
+		FirstName: "John Updated",
+		LastName:  "Doe Updated",
+		Phone:     "0987654321",
+		Address:   "456 New Street",
+	}
+
+	existingCustomer := &entity.Customer{
+		ID:        customerID,
+		UserID:    userID,
+		FirstName: "John",
+		LastName:  "Doe",
+		Phone:     "1234567890",
+		Address:   "123 Old Street",
+	}
+
+	customerRepo.On("FindByUserID", mock.Anything, userID).Return(existingCustomer, nil)
+	customerRepo.On("FindByPhone", mock.Anything, req.Phone).Return(nil, nil)
+	customerRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Customer")).Return(nil)
+
+	err := uc.UpdateCustomer(context.Background(), userID, req)
+
+	assert.NoError(t, err)
+	customerRepo.AssertExpectations(t)
+}
+
+func TestUpdateCustomer_UserNotFound(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	userID := uuid.New()
+	req := &authDTO.UpdateCustomerReq{
+		FirstName: "John Updated",
+	}
+
+	customerRepo.On("FindByUserID", mock.Anything, userID).Return(nil, nil)
+
+	err := uc.UpdateCustomer(context.Background(), userID, req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrUserNotFound)
+	customerRepo.AssertExpectations(t)
+}
+
+func TestUpdateCustomer_PhoneConflict(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	userID := uuid.New()
+	customerID := uuid.New()
+	anotherCustomerID := uuid.New()
+	req := &authDTO.UpdateCustomerReq{
+		Phone: "0987654321",
+	}
+
+	existingCustomer := &entity.Customer{
+		ID:        customerID,
+		UserID:    userID,
+		Phone:     "1234567890",
+	}
+
+	anotherCustomer := &entity.Customer{
+		ID:    anotherCustomerID,
+		Phone: "0987654321",
+	}
+
+	customerRepo.On("FindByUserID", mock.Anything, userID).Return(existingCustomer, nil)
+	customerRepo.On("FindByPhone", mock.Anything, req.Phone).Return(anotherCustomer, nil)
+
+	err := uc.UpdateCustomer(context.Background(), userID, req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrPhoneConflict)
+	customerRepo.AssertExpectations(t)
+}

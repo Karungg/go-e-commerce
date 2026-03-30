@@ -205,3 +205,33 @@ func (u *authUseCase) RegisterSeller(ctx context.Context, req *authDTO.RegisterS
 	u.logger.InfoContext(ctx, "Seller registered successfully", slog.String("user_id", userID.String()))
 	return token, nil
 }
+
+func (u *authUseCase) UpdateCustomer(ctx context.Context, userID uuid.UUID, req *authDTO.UpdateCustomerReq) error {
+	customer, err := u.customerRepo.FindByUserID(ctx, userID)
+	if err != nil || customer == nil {
+		u.logger.WarnContext(ctx, "Customer not found for update", slog.String("user_id", userID.String()))
+		return apperror.ErrUserNotFound
+	}
+
+	if req.Phone != "" && req.Phone != customer.Phone {
+		existingCustomer, _ := u.customerRepo.FindByPhone(ctx, req.Phone)
+		if existingCustomer != nil && existingCustomer.ID != customer.ID {
+			u.logger.WarnContext(ctx, "Update failed due to phone conflict", slog.String("phone", req.Phone))
+			return apperror.ErrPhoneConflict
+		}
+	}
+
+	customer.FirstName = req.FirstName
+	customer.LastName = req.LastName
+	customer.Phone = req.Phone
+	customer.Address = req.Address
+
+	err = u.customerRepo.Update(ctx, customer)
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Failed to update customer", slog.Any("error", err))
+		return err
+	}
+
+	u.logger.InfoContext(ctx, "Customer updated successfully", slog.String("user_id", userID.String()))
+	return nil
+}
