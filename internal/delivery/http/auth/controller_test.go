@@ -14,6 +14,7 @@ import (
 	"go-e-commerce/internal/pkg/apperror"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -30,6 +31,16 @@ func setupRouter(authUsecase *authMock.AuthUseCaseMock) *gin.Engine {
 		auth.POST("/register/seller", authController.RegisterSeller)
 		auth.POST("/login", authController.Login)
 		auth.POST("/logout", authController.Logout)
+		
+		// Map UpdateCustomer to PUT profile
+		auth.PUT("/customer", func(c *gin.Context) {
+			// Mocking the authorization middleware setting userID
+			testUserID, _ := c.GetQuery("test_user_id")
+			if testUserID != "" {
+				c.Set("userID", testUserID)
+			}
+			authController.UpdateCustomer(c)
+		})
 	}
 
 	return router
@@ -273,3 +284,65 @@ func TestLogout_UsecaseError(t *testing.T) {
 
 	mockUsecase.AssertExpectations(t)
 }
+
+func TestUpdateCustomer_Success(t *testing.T) {
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("UpdateCustomer", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*auth.UpdateCustomerReq")).Return(nil)
+
+	router := setupRouter(mockUsecase)
+
+	reqBody := authDTO.UpdateCustomerReq{
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+	body, _ := json.Marshal(reqBody)
+
+	userID := uuid.New().String()
+	req, _ := http.NewRequest(http.MethodPut, "/api/auth/customer?test_user_id="+userID, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var res map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &res)
+
+	assert.Equal(t, "success", res["status"])
+	assert.Equal(t, "customer profile updated successfully", res["message"])
+
+	mockUsecase.AssertExpectations(t)
+}
+
+func TestUpdateCustomer_UserNotFound(t *testing.T) {
+	mockUsecase := new(authMock.AuthUseCaseMock)
+	mockUsecase.On("UpdateCustomer", mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("*auth.UpdateCustomerReq")).Return(apperror.ErrUserNotFound)
+
+	router := setupRouter(mockUsecase)
+
+	reqBody := authDTO.UpdateCustomerReq{
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+	body, _ := json.Marshal(reqBody)
+
+	userID := uuid.New().String()
+	req, _ := http.NewRequest(http.MethodPut, "/api/auth/customer?test_user_id="+userID, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	var res map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &res)
+
+	assert.Equal(t, "error", res["status"])
+	assert.Equal(t, "Update failed", res["message"])
+	assert.Equal(t, apperror.ErrUserNotFound.Message, res["errors"])
+
+	mockUsecase.AssertExpectations(t)
+}
+

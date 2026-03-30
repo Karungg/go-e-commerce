@@ -40,6 +40,7 @@ func SetupRoutes(
 	authProtected.Use(middleware.RequireAuth(jwtAuth))
 	{
 		authProtected.POST("/logout", authController.Logout)
+		authProtected.PUT("/customer", authController.UpdateCustomer)
 	}
 
 	categoriesProtected := api.Group("/categories")
