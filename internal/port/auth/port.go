@@ -17,6 +17,8 @@ type UserRepository interface {
 type CustomerRepository interface {
 	Create(ctx context.Context, customer *entity.Customer) error
 	FindByPhone(ctx context.Context, phone string) (*entity.Customer, error)
+	FindByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
+	Update(ctx context.Context, customer *entity.Customer) error
 }
 
 type SellerRepository interface {
@@ -45,4 +47,5 @@ type AuthUseCase interface {
 	RegisterSeller(ctx context.Context, req *authDTO.RegisterSellerReq) (string, error)
 	Login(ctx context.Context, req *authDTO.LoginReq) (string, error)
 	Logout(ctx context.Context) error
+	UpdateCustomer(ctx context.Context, userID uuid.UUID, req *authDTO.UpdateCustomerReq) error
 }
