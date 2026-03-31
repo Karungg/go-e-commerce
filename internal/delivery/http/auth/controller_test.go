@@ -292,6 +292,7 @@ func TestUpdateCustomer_Success(t *testing.T) {
 	router := setupRouter(mockUsecase)
 
 	reqBody := authDTO.UpdateCustomerReq{
+		Email:     "test@example.com",
 		FirstName: "John",
 		LastName:  "Doe",
 	}
@@ -322,6 +323,7 @@ func TestUpdateCustomer_UserNotFound(t *testing.T) {
 	router := setupRouter(mockUsecase)
 
 	reqBody := authDTO.UpdateCustomerReq{
+		Email:     "test@example.com",
 		FirstName: "John",
 		LastName:  "Doe",
 	}
