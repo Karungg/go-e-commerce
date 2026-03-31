@@ -6,6 +6,7 @@ import (
 	"go-e-commerce/internal/model"
 	"go-e-commerce/internal/repository"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -51,4 +52,39 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity
 		CreatedAt: userModel.CreatedAt,
 		UpdatedAt: userModel.UpdatedAt,
 	}, nil
+}
+
+func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
+	var userModel model.UserModel
+	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&userModel).Error; err != nil {
+		return nil, err
+	}
+
+	return &entity.User{
+		ID:        userModel.ID,
+		Email:     userModel.Email,
+		Password:  userModel.Password,
+		Role:      entity.Role(userModel.Role),
+		IsActive:  userModel.IsActive,
+		CreatedAt: userModel.CreatedAt,
+		UpdatedAt: userModel.UpdatedAt,
+	}, nil
+}
+
+func (r *UserRepository) Update(ctx context.Context, user *entity.User) error {
+	userModel := &model.UserModel{
+		ID:       user.ID,
+		Email:    user.Email,
+		Password: user.Password,
+		Role:     string(user.Role),
+		IsActive: user.IsActive,
+	}
+
+	db := repository.ExtractTx(ctx, r.db)
+	if err := db.WithContext(ctx).Save(userModel).Error; err != nil {
+		return err
+	}
+
+	user.UpdatedAt = userModel.UpdatedAt
+	return nil
 }
