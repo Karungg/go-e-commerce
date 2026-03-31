@@ -290,7 +290,7 @@ func TestLogin_InvalidPassword(t *testing.T) {
 }
 
 func TestUpdateCustomer_Success(t *testing.T) {
-	db, _ := setupTestDB(t)
+	db, sqlMock := setupTestDB(t)
 	userRepo := new(authMock.UserRepositoryMock)
 	customerRepo := new(authMock.CustomerRepositoryMock)
 	sellerRepo := new(authMock.SellerRepositoryMock)
@@ -302,10 +302,16 @@ func TestUpdateCustomer_Success(t *testing.T) {
 	userID := uuid.New()
 	customerID := uuid.New()
 	req := &authDTO.UpdateCustomerReq{
-		FirstName: "John Updated",
-		LastName:  "Doe Updated",
+		Email:     "updated@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
 		Phone:     "0987654321",
 		Address:   "456 New Street",
+	}
+
+	existingUser := &entity.User{
+		ID:    userID,
+		Email: "old@example.com",
 	}
 
 	existingCustomer := &entity.Customer{
@@ -317,14 +323,23 @@ func TestUpdateCustomer_Success(t *testing.T) {
 		Address:   "123 Old Street",
 	}
 
+	userRepo.On("FindByID", mock.Anything, userID).Return(existingUser, nil)
 	customerRepo.On("FindByUserID", mock.Anything, userID).Return(existingCustomer, nil)
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(nil, nil)
 	customerRepo.On("FindByPhone", mock.Anything, req.Phone).Return(nil, nil)
+
+	sqlMock.ExpectBegin()
+	sqlMock.ExpectCommit()
+
+	userRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
 	customerRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Customer")).Return(nil)
 
 	err := uc.UpdateCustomer(context.Background(), userID, req)
 
 	assert.NoError(t, err)
+	userRepo.AssertExpectations(t)
 	customerRepo.AssertExpectations(t)
+	assert.NoError(t, sqlMock.ExpectationsWereMet())
 }
 
 func TestUpdateCustomer_UserNotFound(t *testing.T) {
@@ -339,16 +354,54 @@ func TestUpdateCustomer_UserNotFound(t *testing.T) {
 
 	userID := uuid.New()
 	req := &authDTO.UpdateCustomerReq{
-		FirstName: "John Updated",
+		Email:     "test@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
 	}
 
-	customerRepo.On("FindByUserID", mock.Anything, userID).Return(nil, nil)
+	userRepo.On("FindByID", mock.Anything, userID).Return(nil, nil)
 
 	err := uc.UpdateCustomer(context.Background(), userID, req)
 
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, apperror.ErrUserNotFound)
-	customerRepo.AssertExpectations(t)
+	userRepo.AssertExpectations(t)
+}
+
+func TestUpdateCustomer_EmailConflict(t *testing.T) {
+	db, _ := setupTestDB(t)
+	userRepo := new(authMock.UserRepositoryMock)
+	customerRepo := new(authMock.CustomerRepositoryMock)
+	sellerRepo := new(authMock.SellerRepositoryMock)
+	jwtAuth := security.NewJWTAuth("secret", 24)
+
+	txManager := repository.NewTransactionManager(db)
+	uc := authUC.NewAuthUseCase(txManager, getDiscardLogger(), userRepo, customerRepo, sellerRepo, jwtAuth)
+
+	userID := uuid.New()
+	req := &authDTO.UpdateCustomerReq{
+		Email:     "conflict@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+
+	existingUser := &entity.User{
+		ID:    userID,
+		Email: "old@example.com",
+	}
+	existingCustomer := &entity.Customer{UserID: userID}
+
+	userRepo.On("FindByID", mock.Anything, userID).Return(existingUser, nil)
+	customerRepo.On("FindByUserID", mock.Anything, userID).Return(existingCustomer, nil)
+	
+	conflictUser := &entity.User{ID: uuid.New(), Email: req.Email}
+	userRepo.On("FindByEmail", mock.Anything, req.Email).Return(conflictUser, nil)
+
+	err := uc.UpdateCustomer(context.Background(), userID, req)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperror.ErrEmailConflict)
+	userRepo.AssertExpectations(t)
 }
 
 func TestUpdateCustomer_PhoneConflict(t *testing.T) {
@@ -363,23 +416,30 @@ func TestUpdateCustomer_PhoneConflict(t *testing.T) {
 
 	userID := uuid.New()
 	customerID := uuid.New()
-	anotherCustomerID := uuid.New()
 	req := &authDTO.UpdateCustomerReq{
-		Phone: "0987654321",
+		Email:     "test@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
+		Phone:     "0987654321",
 	}
 
+	existingUser := &entity.User{
+		ID:    userID,
+		Email: "test@example.com",
+	}
 	existingCustomer := &entity.Customer{
 		ID:        customerID,
 		UserID:    userID,
 		Phone:     "1234567890",
 	}
 
+	userRepo.On("FindByID", mock.Anything, userID).Return(existingUser, nil)
+	customerRepo.On("FindByUserID", mock.Anything, userID).Return(existingCustomer, nil)
+	
 	anotherCustomer := &entity.Customer{
-		ID:    anotherCustomerID,
+		ID:    uuid.New(),
 		Phone: "0987654321",
 	}
-
-	customerRepo.On("FindByUserID", mock.Anything, userID).Return(existingCustomer, nil)
 	customerRepo.On("FindByPhone", mock.Anything, req.Phone).Return(anotherCustomer, nil)
 
 	err := uc.UpdateCustomer(context.Background(), userID, req)

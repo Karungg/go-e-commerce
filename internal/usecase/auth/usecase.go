@@ -207,12 +207,28 @@ func (u *authUseCase) RegisterSeller(ctx context.Context, req *authDTO.RegisterS
 }
 
 func (u *authUseCase) UpdateCustomer(ctx context.Context, userID uuid.UUID, req *authDTO.UpdateCustomerReq) error {
+	user, err := u.userRepo.FindByID(ctx, userID)
+	if err != nil || user == nil {
+		u.logger.WarnContext(ctx, "User not found for update", slog.String("user_id", userID.String()))
+		return apperror.ErrUserNotFound
+	}
+
 	customer, err := u.customerRepo.FindByUserID(ctx, userID)
 	if err != nil || customer == nil {
 		u.logger.WarnContext(ctx, "Customer not found for update", slog.String("user_id", userID.String()))
 		return apperror.ErrUserNotFound
 	}
 
+	// Email conflict check
+	if req.Email != "" && req.Email != user.Email {
+		existingUser, _ := u.userRepo.FindByEmail(ctx, req.Email)
+		if existingUser != nil && existingUser.ID != user.ID {
+			u.logger.WarnContext(ctx, "Update failed due to email conflict", slog.String("email", req.Email))
+			return apperror.ErrEmailConflict
+		}
+	}
+
+	// Phone conflict check
 	if req.Phone != "" && req.Phone != customer.Phone {
 		existingCustomer, _ := u.customerRepo.FindByPhone(ctx, req.Phone)
 		if existingCustomer != nil && existingCustomer.ID != customer.ID {
@@ -221,14 +237,24 @@ func (u *authUseCase) UpdateCustomer(ctx context.Context, userID uuid.UUID, req 
 		}
 	}
 
+	user.Email = req.Email
 	customer.FirstName = req.FirstName
 	customer.LastName = req.LastName
 	customer.Phone = req.Phone
 	customer.Address = req.Address
 
-	err = u.customerRepo.Update(ctx, customer)
+	err = u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
+		if err := u.userRepo.Update(ctx, user); err != nil {
+			return fmt.Errorf("failed to update user: %w", err)
+		}
+		if err := u.customerRepo.Update(ctx, customer); err != nil {
+			return fmt.Errorf("failed to update customer: %w", err)
+		}
+		return nil
+	})
+
 	if err != nil {
-		u.logger.ErrorContext(ctx, "Failed to update customer", slog.Any("error", err))
+		u.logger.ErrorContext(ctx, "Transaction failed during customer profile update", slog.Any("error", err))
 		return err
 	}
 
