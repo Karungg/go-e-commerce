@@ -23,6 +23,7 @@ type LoginReq struct {
 }
 
 type UpdateCustomerReq struct {
+	Email     string `json:"email" binding:"required,email,max=100"`
 	FirstName string `json:"first_name" binding:"required,alpha,min=2,max=50"`
 	LastName  string `json:"last_name" binding:"required,alpha,min=2,max=50"`
 	Phone     string `json:"phone" binding:"omitempty,numeric,min=10,max=15"`
