@@ -2,6 +2,7 @@ package route
 
 import (
 	authCtrl "go-e-commerce/internal/delivery/http/auth"
+	cartCtrl "go-e-commerce/internal/delivery/http/cart"
 	categoryCtrl "go-e-commerce/internal/delivery/http/category"
 	"go-e-commerce/internal/delivery/http/middleware"
 	productCtrl "go-e-commerce/internal/delivery/http/product"
@@ -15,6 +16,7 @@ func SetupRoutes(
 	authController *authCtrl.AuthController,
 	categoryController *categoryCtrl.CategoryController,
 	productController *productCtrl.ProductController,
+	cartController *cartCtrl.CartController,
 	jwtAuth authPort.TokenValidator,
 ) {
 	auth := api.Group("/auth")
@@ -57,5 +59,15 @@ func SetupRoutes(
 		productsProtected.POST("", productController.Create)
 		productsProtected.PUT("/:id", productController.Update)
 		productsProtected.DELETE("/:id", productController.Delete)
+	}
+
+	cart := api.Group("/cart")
+	cart.Use(middleware.RequireAuth(jwtAuth))
+	cart.Use(middleware.RequireRole("customer"))
+	{
+		cart.GET("", cartController.GetCart)
+		cart.POST("", cartController.AddToCart)
+		cart.PUT("/:id", cartController.UpdateCartItem)
+		cart.DELETE("/batch", cartController.BatchDeleteCartItems)
 	}
 }
