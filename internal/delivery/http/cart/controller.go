@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"go-e-commerce/internal/delivery/http/response"
-	"go-e-commerce/internal/dto"
+	cartDTO "go-e-commerce/internal/dto/cart"
 	cartPort "go-e-commerce/internal/port/cart"
 
 	"github.com/gin-gonic/gin"
@@ -56,7 +56,7 @@ func (c *CartController) AddToCart(ctx *gin.Context) {
 		return
 	}
 
-	var req dto.AddCartItemRequest
+	var req cartDTO.AddCartItemRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request", err.Error())
 		return
@@ -94,7 +94,7 @@ func (c *CartController) UpdateCartItem(ctx *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateCartItemRequest
+	var req cartDTO.UpdateCartItemRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request", err.Error())
 		return
@@ -121,7 +121,7 @@ func (c *CartController) BatchDeleteCartItems(ctx *gin.Context) {
 		return
 	}
 
-	var req dto.BatchDeleteCartItemsRequest
+	var req cartDTO.BatchDeleteCartItemsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid request", err.Error())
 		return

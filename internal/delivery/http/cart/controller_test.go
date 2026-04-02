@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	cartCtrl "go-e-commerce/internal/delivery/http/cart"
-	"go-e-commerce/internal/dto"
+	cartDTO "go-e-commerce/internal/dto/cart"
 	cartMock "go-e-commerce/internal/mocks/cart"
 
 	"github.com/gin-gonic/gin"
@@ -52,7 +52,7 @@ func setupControllerTest() (*cartMock.CartUseCaseMock, *gin.Engine) {
 func TestGetCartController_Success(t *testing.T) {
 	useCase, router := setupControllerTest()
 
-	expectedResponse := &dto.CartResponse{
+	expectedResponse := &cartDTO.CartResponse{
 		ID: mockCartID,
 		UserID: mockUserID,
 	}
@@ -70,13 +70,13 @@ func TestGetCartController_Success(t *testing.T) {
 func TestAddToCartController_Success(t *testing.T) {
 	useCase, router := setupControllerTest()
 
-	payload := dto.AddCartItemRequest{
+	payload := cartDTO.AddCartItemRequest{
 		ProductID: mockProductID,
 		Quantity:  2,
 	}
 	body, _ := json.Marshal(payload)
 
-	useCase.On("AddToCart", mock.Anything, mockUserID, mock.AnythingOfType("*dto.AddCartItemRequest")).Return(nil)
+	useCase.On("AddToCart", mock.Anything, mockUserID, mock.AnythingOfType("*cart.AddCartItemRequest")).Return(nil)
 
 	req, _ := http.NewRequest(http.MethodPost, "/api/cart", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -110,12 +110,12 @@ func TestAddToCartController_InvalidPayload(t *testing.T) {
 func TestUpdateCartItemController_Success(t *testing.T) {
 	useCase, router := setupControllerTest()
 
-	payload := dto.UpdateCartItemRequest{
+	payload := cartDTO.UpdateCartItemRequest{
 		Quantity: 5,
 	}
 	body, _ := json.Marshal(payload)
 
-	useCase.On("UpdateCartItem", mock.Anything, mockUserID, mockItemID, mock.AnythingOfType("*dto.UpdateCartItemRequest")).Return(nil)
+	useCase.On("UpdateCartItem", mock.Anything, mockUserID, mockItemID, mock.AnythingOfType("*cart.UpdateCartItemRequest")).Return(nil)
 
 	req, _ := http.NewRequest(http.MethodPut, "/api/cart/"+mockItemID.String(), bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -130,12 +130,12 @@ func TestUpdateCartItemController_Success(t *testing.T) {
 func TestBatchDeleteCartItemsController_Success(t *testing.T) {
 	useCase, router := setupControllerTest()
 
-	payload := dto.BatchDeleteCartItemsRequest{
+	payload := cartDTO.BatchDeleteCartItemsRequest{
 		CartItemIDs: []uuid.UUID{mockItemID},
 	}
 	body, _ := json.Marshal(payload)
 
-	useCase.On("BatchDeleteCartItems", mock.Anything, mockUserID, mock.AnythingOfType("*dto.BatchDeleteCartItemsRequest")).Return(nil)
+	useCase.On("BatchDeleteCartItems", mock.Anything, mockUserID, mock.AnythingOfType("*cart.BatchDeleteCartItemsRequest")).Return(nil)
 
 	req, _ := http.NewRequest(http.MethodDelete, "/api/cart/batch", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")

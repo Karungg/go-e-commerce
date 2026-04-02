@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"go-e-commerce/internal/dto"
+	cartDTO "go-e-commerce/internal/dto/cart"
 	"go-e-commerce/internal/entity"
 	authPort "go-e-commerce/internal/port/auth"
 	cartPort "go-e-commerce/internal/port/cart"
@@ -32,7 +32,7 @@ func NewCartUseCase(
 	}
 }
 
-func (u *cartUseCase) GetCart(ctx context.Context, userID uuid.UUID) (*dto.CartResponse, error) {
+func (u *cartUseCase) GetCart(ctx context.Context, userID uuid.UUID) (*cartDTO.CartResponse, error) {
 	cart, err := u.getOrCreateCart(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (u *cartUseCase) GetCart(ctx context.Context, userID uuid.UUID) (*dto.CartR
 	return mapCartToResponse(cart), nil
 }
 
-func (u *cartUseCase) AddToCart(ctx context.Context, userID uuid.UUID, req *dto.AddCartItemRequest) error {
+func (u *cartUseCase) AddToCart(ctx context.Context, userID uuid.UUID, req *cartDTO.AddCartItemRequest) error {
 	return u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
 		cart, err := u.getOrCreateCart(ctx, userID)
 		if err != nil {
@@ -86,7 +86,7 @@ func (u *cartUseCase) AddToCart(ctx context.Context, userID uuid.UUID, req *dto.
 	})
 }
 
-func (u *cartUseCase) UpdateCartItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req *dto.UpdateCartItemRequest) error {
+func (u *cartUseCase) UpdateCartItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req *cartDTO.UpdateCartItemRequest) error {
 	return u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
 		// Verify cart belongs to user
 		cart, err := u.getOrCreateCart(ctx, userID)
@@ -120,7 +120,7 @@ func (u *cartUseCase) UpdateCartItem(ctx context.Context, userID uuid.UUID, item
 	})
 }
 
-func (u *cartUseCase) BatchDeleteCartItems(ctx context.Context, userID uuid.UUID, req *dto.BatchDeleteCartItemsRequest) error {
+func (u *cartUseCase) BatchDeleteCartItems(ctx context.Context, userID uuid.UUID, req *cartDTO.BatchDeleteCartItemsRequest) error {
 	return u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
 		cart, err := u.getOrCreateCart(ctx, userID)
 		if err != nil {
@@ -149,17 +149,17 @@ func (u *cartUseCase) getOrCreateCart(ctx context.Context, userID uuid.UUID) (*e
 	return cart, nil
 }
 
-func mapCartToResponse(cart *entity.Cart) *dto.CartResponse {
-	res := &dto.CartResponse{
+func mapCartToResponse(cart *entity.Cart) *cartDTO.CartResponse {
+	res := &cartDTO.CartResponse{
 		ID:        cart.ID,
 		UserID:    cart.UserID,
-		Items:     make([]dto.CartItemResponse, 0, len(cart.Items)),
+		Items:     make([]cartDTO.CartItemResponse, 0, len(cart.Items)),
 		CreatedAt: cart.CreatedAt,
 		UpdatedAt: cart.UpdatedAt,
 	}
 
 	for _, item := range cart.Items {
-		itemRes := dto.CartItemResponse{
+		itemRes := cartDTO.CartItemResponse{
 			ID:        item.ID,
 			CartID:    item.CartID,
 			ProductID: item.ProductID,
@@ -169,7 +169,7 @@ func mapCartToResponse(cart *entity.Cart) *dto.CartResponse {
 		}
 
 		if item.Product != nil {
-			itemRes.Product = dto.ProductResponse{
+			itemRes.Product = cartDTO.ProductResponse{
 				ID:          item.Product.ID,
 				Title:       item.Product.Title,
 				Description: item.Product.Description,

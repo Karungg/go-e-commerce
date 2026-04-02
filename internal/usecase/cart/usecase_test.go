@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"go-e-commerce/internal/dto"
+	cartDTO "go-e-commerce/internal/dto/cart"
 	"go-e-commerce/internal/entity"
 	authMock "go-e-commerce/internal/mocks/auth"
 	cartMock "go-e-commerce/internal/mocks/cart"
@@ -72,7 +72,7 @@ func TestGetCart_AutoCreate(t *testing.T) {
 func TestAddToCart_SuccessNewItem(t *testing.T) {
 	_, cartRepo, productRepo, useCase := setupTest()
 
-	req := &dto.AddCartItemRequest{
+	req := &cartDTO.AddCartItemRequest{
 		ProductID: mockProductID,
 		Quantity:  2,
 	}
@@ -96,7 +96,7 @@ func TestAddToCart_SuccessNewItem(t *testing.T) {
 func TestAddToCart_SuccessUpdateItem(t *testing.T) {
 	_, cartRepo, productRepo, useCase := setupTest()
 
-	req := &dto.AddCartItemRequest{
+	req := &cartDTO.AddCartItemRequest{
 		ProductID: mockProductID,
 		Quantity:  2,
 	}
@@ -121,7 +121,7 @@ func TestAddToCart_SuccessUpdateItem(t *testing.T) {
 func TestAddToCart_InsufficientStock(t *testing.T) {
 	_, cartRepo, productRepo, useCase := setupTest()
 
-	req := &dto.AddCartItemRequest{
+	req := &cartDTO.AddCartItemRequest{
 		ProductID: mockProductID,
 		Quantity:  12, // More than stock
 	}
@@ -141,7 +141,7 @@ func TestAddToCart_InsufficientStock(t *testing.T) {
 func TestUpdateCartItem_Success(t *testing.T) {
 	_, cartRepo, productRepo, useCase := setupTest()
 
-	req := &dto.UpdateCartItemRequest{
+	req := &cartDTO.UpdateCartItemRequest{
 		Quantity: 5,
 	}
 
@@ -166,7 +166,7 @@ func TestUpdateCartItem_Success(t *testing.T) {
 func TestUpdateCartItem_NotFoundInCart(t *testing.T) {
 	_, cartRepo, _, useCase := setupTest()
 
-	req := &dto.UpdateCartItemRequest{Quantity: 5}
+	req := &cartDTO.UpdateCartItemRequest{Quantity: 5}
 
 	existingCart := &entity.Cart{
 		ID:     mockCartID,
@@ -185,7 +185,7 @@ func TestUpdateCartItem_NotFoundInCart(t *testing.T) {
 func TestBatchDeleteCartItems_Success(t *testing.T) {
 	_, cartRepo, _, useCase := setupTest()
 
-	req := &dto.BatchDeleteCartItemsRequest{
+	req := &cartDTO.BatchDeleteCartItemsRequest{
 		CartItemIDs: []uuid.UUID{mockItemID},
 	}
 

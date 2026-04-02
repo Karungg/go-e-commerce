@@ -3,7 +3,7 @@ package cart
 import (
 	"context"
 
-	"go-e-commerce/internal/dto"
+	cartDTO "go-e-commerce/internal/dto/cart"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
@@ -12,25 +12,25 @@ type CartUseCaseMock struct {
 	mock.Mock
 }
 
-func (m *CartUseCaseMock) GetCart(ctx context.Context, userID uuid.UUID) (*dto.CartResponse, error) {
+func (m *CartUseCaseMock) GetCart(ctx context.Context, userID uuid.UUID) (*cartDTO.CartResponse, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) != nil {
-		return args.Get(0).(*dto.CartResponse), args.Error(1)
+		return args.Get(0).(*cartDTO.CartResponse), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
 
-func (m *CartUseCaseMock) AddToCart(ctx context.Context, userID uuid.UUID, req *dto.AddCartItemRequest) error {
+func (m *CartUseCaseMock) AddToCart(ctx context.Context, userID uuid.UUID, req *cartDTO.AddCartItemRequest) error {
 	args := m.Called(ctx, userID, req)
 	return args.Error(0)
 }
 
-func (m *CartUseCaseMock) UpdateCartItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req *dto.UpdateCartItemRequest) error {
+func (m *CartUseCaseMock) UpdateCartItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req *cartDTO.UpdateCartItemRequest) error {
 	args := m.Called(ctx, userID, itemID, req)
 	return args.Error(0)
 }
 
-func (m *CartUseCaseMock) BatchDeleteCartItems(ctx context.Context, userID uuid.UUID, req *dto.BatchDeleteCartItemsRequest) error {
+func (m *CartUseCaseMock) BatchDeleteCartItems(ctx context.Context, userID uuid.UUID, req *cartDTO.BatchDeleteCartItemsRequest) error {
 	args := m.Called(ctx, userID, req)
 	return args.Error(0)
 }
