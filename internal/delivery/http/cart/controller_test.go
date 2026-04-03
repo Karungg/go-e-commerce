@@ -31,7 +31,6 @@ func setupControllerTest() (*cartMock.CartUseCaseMock, *gin.Engine) {
 
 	router := gin.Default()
 	
-	// Create a dummy middleware to inject user Context
 	authMiddleware := func(c *gin.Context) {
 		c.Set("userID", mockUserID.String())
 		c.Next()

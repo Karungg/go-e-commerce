@@ -119,8 +119,6 @@ func mapCartItemModelToEntity(m *model.CartItemModel) *entity.CartItem {
 		UpdatedAt: m.UpdatedAt,
 	}
 
-	// We safely map Product here if exists. However entity.Product has other nested things like Category.
-	// We map the essential parts.
 	if m.Product.ID != uuid.Nil {
 		item.Product = &entity.Product{
 			ID:          m.Product.ID,

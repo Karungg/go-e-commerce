@@ -30,7 +30,6 @@ func setupTest() (*authMock.TransactionManagerMock, *cartMock.CartRepositoryMock
 	cartRepo := &cartMock.CartRepositoryMock{}
 	productRepo := &productMock.ProductRepositoryMock{}
 	
-	// Assuming cart.NewCartUseCase returns the cartPort.CartUseCase interface
 	useCase := cart.NewCartUseCase(txManager, cartRepo, productRepo)
 	
 	return txManager, cartRepo, productRepo, useCase
@@ -109,7 +108,7 @@ func TestAddToCart_SuccessUpdateItem(t *testing.T) {
 	existingItem := &entity.CartItem{ID: mockItemID, CartID: mockCartID, ProductID: mockProductID, Quantity: 3}
 	cartRepo.On("GetCartItem", mock.Anything, mockCartID, mockProductID).Return(existingItem, nil)
 	
-	cartRepo.On("UpdateCartItemQuantity", mock.Anything, mockItemID, 5).Return(nil) // 3 + 2 = 5
+	cartRepo.On("UpdateCartItemQuantity", mock.Anything, mockItemID, 5).Return(nil)
 
 	err := useCase.AddToCart(context.Background(), mockUserID, req)
 
@@ -123,7 +122,7 @@ func TestAddToCart_InsufficientStock(t *testing.T) {
 
 	req := &cartDTO.AddCartItemRequest{
 		ProductID: mockProductID,
-		Quantity:  12, // More than stock
+		Quantity:  12,
 	}
 
 	existingCart := &entity.Cart{ID: mockCartID, UserID: mockUserID}
@@ -171,7 +170,7 @@ func TestUpdateCartItem_NotFoundInCart(t *testing.T) {
 	existingCart := &entity.Cart{
 		ID:     mockCartID,
 		UserID: mockUserID,
-		Items:  []entity.CartItem{}, // Empty cart
+		Items:  []entity.CartItem{},
 	}
 	
 	cartRepo.On("GetCartByUserID", mock.Anything, mockUserID).Return(existingCart, nil)

@@ -56,19 +56,16 @@ func (u *cartUseCase) AddToCart(ctx context.Context, userID uuid.UUID, req *cart
 			return err
 		}
 
-		// Check stock
 		if product.Stock < req.Quantity {
 			return errors.New("insufficient stock")
 		}
 
-		// Check if item already in cart
 		existingItem, err := u.cartRepo.GetCartItem(ctx, cart.ID, req.ProductID)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return err
 		}
 
 		if existingItem != nil {
-			// Update quantity
 			newQuantity := existingItem.Quantity + req.Quantity
 			if product.Stock < newQuantity {
 				return errors.New("insufficient stock for combined quantity")
@@ -76,7 +73,6 @@ func (u *cartUseCase) AddToCart(ctx context.Context, userID uuid.UUID, req *cart
 			return u.cartRepo.UpdateCartItemQuantity(ctx, existingItem.ID, newQuantity)
 		}
 
-		// Create new item
 		newItem := &entity.CartItem{
 			CartID:    cart.ID,
 			ProductID: req.ProductID,
@@ -88,13 +84,11 @@ func (u *cartUseCase) AddToCart(ctx context.Context, userID uuid.UUID, req *cart
 
 func (u *cartUseCase) UpdateCartItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req *cartDTO.UpdateCartItemRequest) error {
 	return u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
-		// Verify cart belongs to user
 		cart, err := u.getOrCreateCart(ctx, userID)
 		if err != nil {
 			return err
 		}
 
-		// Since we don't have GetCartItemByID directly, we just verify it exists within the user's cart
 		var targetItem *entity.CartItem
 		for _, item := range cart.Items {
 			if item.ID == itemID {
@@ -135,7 +129,6 @@ func (u *cartUseCase) getOrCreateCart(ctx context.Context, userID uuid.UUID) (*e
 	cart, err := u.cartRepo.GetCartByUserID(ctx, userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// Create new cart
 			newCart := &entity.Cart{
 				UserID: userID,
 			}
